@@ -10,9 +10,10 @@ ASSERT PASS cycle=13 [INACTIVE_LANES_ZERO]
 ASSERT PASS cycle=13 [INACTIVE_LANES_ZERO]
 ASSERT PASS cycle=13 [INACTIVE_LANES_ZERO]
 ASSERT PASS cycle=14 [OUTPUT_STABLE_UNDER_BACKPRESSURE]
-VECTOR PASS verification/vectors/fips_k128_enc.vec key_size=0 mode=0 decipher=0 blocks=1
-SUMMARY lanes=4 assertions=12 failures=0 scenario=WF-010a_backpressure
-- verification\tb_aes128_256_batch.sv:803: Verilog $finish
+ASSERT PASS cycle=40 [NO_EXTRA_OUTPUT_AFTER_MESSAGE]
+VECTOR PASS vectors/fips_k128_enc.vec key_size=0 mode=0 decipher=0 blocks=1
+SUMMARY lanes=4 assertions=13 failures=0 scenario=WF-010a_backpressure
+- C:\HQuan\102_MyGithub\AES-128-256\verification\ht_aes128_256\tb_aes128_256_batch.sv:1139: Verilog $finish
 - S i m u l a t i o n   R e p o r t: Verilator 5.053 devel
-- Verilator: $finish at 200ns; walltime 0.011 s; speed 18.775 us/s
-- Verilator: cpu 0.000 s on 1 threads; allocated 9 MB
+- Verilator: $finish at 460ns; walltime 0.045 s; speed 10.257 us/s
+- Verilator: cpu 0.031 s on 1 threads; allocated 9 MB

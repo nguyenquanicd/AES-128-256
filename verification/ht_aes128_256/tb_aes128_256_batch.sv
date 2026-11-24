@@ -40,6 +40,13 @@ module tb_aes128_256_batch;
   integer assertion_count = 0;
   integer assertion_failures = 0;
   logic wave_dump_enabled = 1'b0;
+  // Distinct check names that were executed; a check only counts once per name.
+  logic seen_names [string];
+  // Idle-window monitor: any o_batch_valid sample while armed is an error.
+  logic expect_idle = 1'b0;
+  // WF-012b starts with the output sink stalled, so reset must not release it.
+  logic hold_ready_low = 1'b0;
+  integer idle_violations = 0;
 
   m_aes128_256_batch_top #(
     .PARA_AES_LANE_NUM (LPARA_AES_LANE_NUM),
@@ -74,6 +81,10 @@ module tb_aes128_256_batch;
 
   always #5 i_clk_core = ~i_clk_core;
   always @(posedge i_clk_core) begin
+    if (expect_idle && (o_batch_valid !== 1'b0))
+      idle_violations = idle_violations + 1;
+  end
+  always @(posedge i_clk_core) begin
     if (!i_rst_n_core)
       cycle_count = 0;
     else
@@ -83,6 +94,7 @@ module tb_aes128_256_batch;
   task automatic check_named(input string name, input logic condition, input string detail);
     begin
       assertion_count = assertion_count + 1;
+      seen_names[name] = 1'b1;
       if (condition !== 1'b1) begin
         assertion_failures = assertion_failures + 1;
         $display("ASSERT FAIL cycle=%0d [%0s] %0s", cycle_count, name, detail);
@@ -98,7 +110,7 @@ module tb_aes128_256_batch;
       i_rst_n_core = 1'b0;
       i_cfg_valid = 1'b0;
       i_batch_valid = 1'b0;
-      i_batch_ready = 1'b1;
+      i_batch_ready = !hold_ready_low;
       i_err_ready = 1'b0;
       i_zeroize_req = 1'b0;
       repeat (2) @(negedge i_clk_core);
@@ -222,6 +234,28 @@ module tb_aes128_256_batch;
       #0.1;
       @(negedge i_clk_core);
       i_err_ready = 1'b0;
+    end
+  endtask
+
+  // Arm a monitor that fails if o_batch_valid is seen in the next cycles.
+  task automatic idle_window(input integer cycles, input string check_name);
+    begin
+      repeat (2) @(posedge i_clk_core);
+      #0.1;
+      idle_violations = 0;
+      expect_idle = 1'b1;
+      repeat (cycles) @(negedge i_clk_core);
+      expect_idle = 1'b0;
+      check_named(check_name, idle_violations == 0,
+                  "o_batch_valid was asserted when no result may exist");
+    end
+  endtask
+
+  task automatic consume_error_checked;
+    begin
+      consume_error();
+      check_named("ERROR_CLEARED_AFTER_ACCEPT", !o_err_valid,
+                  "error record must clear after i_err_ready accepts it");
     end
   endtask
 
@@ -460,6 +494,7 @@ module tb_aes128_256_batch;
               block_idx = block_idx + chunk_count;
             end
           end
+          idle_window(24, "NO_EXTRA_OUTPUT_AFTER_MESSAGE");
           $display("VECTOR PASS %0s key_size=%0d mode=%0d decipher=%0d blocks=%0d",
                    path, key_size, mode_value, decipher_value, block_count);
         end
@@ -605,6 +640,293 @@ module tb_aes128_256_batch;
     end
   endtask
 
+  // Stream driver: presents the next batch as soon as the DUT accepts the previous
+  // one and applies an output-ready pattern, so interlocks and backpressure hold.
+  // Handshakes are sampled 1 ns before each rising edge from DUT outputs only.
+  task automatic read_vector_stream(input string path, input integer ready_mode);
+    integer fd;
+    integer rc;
+    integer key_size;
+    integer mode_value;
+    integer decipher_value;
+    integer segment_value;
+    integer ctr_width;
+    integer block_count;
+    integer block_idx;
+    integer lane_idx;
+    integer chunk_count;
+    integer batch_count;
+    integer in_idx;
+    integer out_idx;
+    integer cyc;
+    integer cfg_cycle;
+    integer effective_lanes;
+    logic [255:0] key_value;
+    logic [127:0] iv_value;
+    logic [127:0] data_mem [0:LPARA_MAX_BLOCKS-1];
+    logic [127:0] expected_mem [0:LPARA_MAX_BLOCKS-1];
+    logic [127:0] mask_mem [0:LPARA_MAX_BLOCKS-1];
+    logic [LPARA_AES_BATCH_W-1:0] in_b [0:LPARA_MAX_BLOCKS-1];
+    logic [LPARA_AES_BATCH_W-1:0] exp_b [0:LPARA_MAX_BLOCKS-1];
+    logic [LPARA_AES_BATCH_W-1:0] cmp_b [0:LPARA_MAX_BLOCKS-1];
+    logic [LPARA_AES_BATCH_W-1:0] idle_lane_b [0:LPARA_MAX_BLOCKS-1];
+    logic [LPARA_AES_LANE_NUM-1:0] mask_b [0:LPARA_MAX_BLOCKS-1];
+    logic last_b [0:LPARA_MAX_BLOCKS-1];
+    logic [15:0] lfsr;
+    logic prev_stall;
+    logic [LPARA_AES_BATCH_W-1:0] prev_data;
+    logic [LPARA_AES_LANE_NUM-1:0] prev_mask;
+    logic prev_last;
+    logic take_in;
+    logic ready_now;
+    begin
+      fd = $fopen(path, "r");
+      if (fd == 0) begin
+        $display("ERROR: cannot open vector file %0s", path);
+        assertion_failures = assertion_failures + 1;
+      end else begin
+        rc = $fscanf(fd, "%d %d %d %d %d\n", key_size, mode_value,
+                     decipher_value, segment_value, ctr_width);
+        rc = $fscanf(fd, "%h\n", key_value);
+        rc = $fscanf(fd, "%h\n", iv_value);
+        rc = $fscanf(fd, "%d\n", block_count);
+        if ((rc != 1) || (block_count <= 0) || (block_count > LPARA_MAX_BLOCKS)) begin
+          $display("ERROR: malformed vector header in %0s", path);
+          assertion_failures = assertion_failures + 1;
+          $fclose(fd);
+        end else begin
+          for (block_idx = 0; block_idx < block_count; block_idx = block_idx + 1) begin
+            rc = $fscanf(fd, "%h %h %h\n", data_mem[block_idx],
+                         expected_mem[block_idx], mask_mem[block_idx]);
+            if (rc != 3) begin
+              $display("ERROR: malformed vector record %0d in %0s", block_idx, path);
+              assertion_failures = assertion_failures + 1;
+            end
+          end
+          $fclose(fd);
+
+          effective_lanes = LPARA_AES_LANE_NUM;
+          if ((mode_value == 1 && (decipher_value == 0)) ||
+              (mode_value == 2) || (mode_value == 3))
+            effective_lanes = 1;
+          batch_count = 0;
+          block_idx = 0;
+          while (block_idx < block_count) begin
+            chunk_count = block_count - block_idx;
+            if (chunk_count > effective_lanes)
+              chunk_count = effective_lanes;
+            in_b[batch_count] = '0;
+            exp_b[batch_count] = '0;
+            cmp_b[batch_count] = '0;
+            idle_lane_b[batch_count] = '1;
+            mask_b[batch_count] = '0;
+            for (lane_idx = 0; lane_idx < chunk_count; lane_idx = lane_idx + 1) begin
+              in_b[batch_count][lane_idx*128 +: 128] = data_mem[block_idx + lane_idx];
+              exp_b[batch_count][lane_idx*128 +: 128] = expected_mem[block_idx + lane_idx];
+              cmp_b[batch_count][lane_idx*128 +: 128] = mask_mem[block_idx + lane_idx];
+              idle_lane_b[batch_count][lane_idx*128 +: 128] = 128'b0;
+              mask_b[batch_count][lane_idx] = 1'b1;
+            end
+            last_b[batch_count] = (block_idx + chunk_count == block_count);
+            batch_count = batch_count + 1;
+            block_idx = block_idx + chunk_count;
+          end
+
+          configure_message(1'(key_size), key_value, 3'(mode_value),
+                            1'(decipher_value), iv_value, 4'(segment_value), cfg_cycle);
+          in_idx = 0;
+          out_idx = 0;
+          cyc = 0;
+          prev_stall = 1'b0;
+          prev_data = '0;
+          prev_mask = '0;
+          prev_last = 1'b0;
+          lfsr = 16'hACE1 ^ 16'(ready_mode * 16'h1D3);
+          while ((out_idx < batch_count) && (cyc < 4000)) begin
+            @(negedge i_clk_core);
+            if (in_idx < batch_count) begin
+              i_batch_data = in_b[in_idx];
+              i_batch_lane_valid = mask_b[in_idx];
+              i_batch_last = last_b[in_idx];
+              i_batch_valid = 1'b1;
+            end else begin
+              i_batch_data = '0;
+              i_batch_lane_valid = '0;
+              i_batch_last = 1'b0;
+              i_batch_valid = 1'b0;
+            end
+            lfsr = {lfsr[14:0], lfsr[15] ^ lfsr[13] ^ lfsr[12] ^ lfsr[10]};
+            case (ready_mode)
+              0: ready_now = 1'b1;
+              1: ready_now = ((cyc % 4) == 3);
+              default: ready_now = lfsr[1] | lfsr[5];
+            endcase
+            i_batch_ready = ready_now;
+            #4.0;
+            if (prev_stall)
+              check_named("STREAM_HOLD_UNDER_BACKPRESSURE",
+                          o_batch_valid && (o_batch_data == prev_data) &&
+                          (o_batch_lane_valid == prev_mask) && (o_batch_last == prev_last),
+                          "stalled output record changed or disappeared before it was accepted");
+            take_in = i_batch_valid && o_batch_ready;
+            prev_stall = 1'b0;
+            if (o_batch_valid && i_batch_ready) begin
+              if (out_idx < batch_count) begin
+                check_named("STREAM_GOLDEN_DATA",
+                            (((o_batch_data ^ exp_b[out_idx]) & cmp_b[out_idx]) == '0) &&
+                            ((o_batch_data & idle_lane_b[out_idx]) == '0),
+                            "stream result differs from the independent model or unused lane not zero");
+                check_named("STREAM_LANE_MASK_LAST",
+                            (o_batch_lane_valid == mask_b[out_idx]) &&
+                            (o_batch_last == last_b[out_idx]),
+                            "stream lane mask or last marker mismatch");
+              end
+              out_idx = out_idx + 1;
+            end else if (o_batch_valid && !i_batch_ready) begin
+              prev_stall = 1'b1;
+              prev_data = o_batch_data;
+              prev_mask = o_batch_lane_valid;
+              prev_last = o_batch_last;
+            end
+            if (take_in)
+              in_idx = in_idx + 1;
+            cyc = cyc + 1;
+          end
+          @(negedge i_clk_core);
+          i_batch_data = '0;
+          i_batch_lane_valid = '0;
+          i_batch_last = 1'b0;
+          i_batch_valid = 1'b0;
+          i_batch_ready = 1'b1;
+          check_named("STREAM_ALL_BATCHES_RETURNED", out_idx == batch_count,
+                      "stream did not return exactly the expected number of batches");
+          if (out_idx != batch_count)
+            reset_dut();
+          else
+            idle_window(24, "STREAM_NO_EXTRA_OUTPUT");
+        end
+      end
+    end
+  endtask
+
+  task automatic run_stream_manifest(input string vector_dir);
+    integer manifest_fd;
+    integer scan_count;
+    string filename;
+    begin
+      manifest_fd = $fopen({vector_dir, "manifest.txt"}, "r");
+      if (manifest_fd == 0) begin
+        $display("ERROR: cannot open vector manifest in %0s", vector_dir);
+        assertion_failures = assertion_failures + 1;
+      end else begin
+        while (!$feof(manifest_fd)) begin
+          filename = "";
+          scan_count = $fscanf(manifest_fd, "%s\n", filename);
+          if ((scan_count == 1) && (filename != "throughput_k128") &&
+              (filename != "throughput_k256")) begin
+            read_vector_stream({vector_dir, filename, ".vec"}, 1);
+            read_vector_stream({vector_dir, filename, ".vec"}, 2);
+          end
+        end
+        $fclose(manifest_fd);
+      end
+    end
+  endtask
+
+  // Directed checks for configuration errors, error recovery, key clearing and
+  // the absence of stale results. Expected values come from FIPS 197 Appendix C.
+  task automatic run_extra_checks(input string vector_dir);
+    integer cfg_cycle;
+    integer input_cycle;
+    integer output_cycle;
+    integer mode_idx;
+    logic [255:0] key128;
+    logic [255:0] key256;
+    logic [LPARA_AES_BATCH_W-1:0] one_data;
+    logic [LPARA_AES_LANE_NUM-1:0] one_mask;
+    logic [127:0] fips_plain;
+    logic [127:0] fips_cipher128;
+    begin
+      key128 = {128'b0, 128'h000102030405060708090a0b0c0d0e0f};
+      key256 = 256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f;
+      fips_plain = 128'h00112233445566778899aabbccddeeff;
+      fips_cipher128 = 128'h69c4e0d86a7b0430d8cdb78070b4c55a;
+
+      // Illegal mode codes and illegal CFB segment codes are rejected with error 1.
+      for (mode_idx = 5; mode_idx < 8; mode_idx = mode_idx + 1) begin
+        configure_message(1'b0, key128, 3'(mode_idx), 1'b0, '0, 4'd7, cfg_cycle);
+        check_named("CFG_ILLEGAL_MODE_ERROR_NEXT_CYCLE",
+                    o_err_valid && (o_err_code == 4'd1),
+                    "illegal mode code must report error 1 in the cycle after the handshake");
+        consume_error_checked();
+        check_named("CFG_READY_AFTER_CFG_ERROR", o_cfg_ready,
+                    "a rejected configuration must leave the IP without a message context");
+      end
+      for (mode_idx = 8; mode_idx < 16; mode_idx = mode_idx + 7) begin
+        configure_message(1'b1, key256, 3'd2, 1'b0, '0, 4'(mode_idx), cfg_cycle);
+        check_named("CFG_ILLEGAL_CFB_SEGMENT_ERROR_NEXT_CYCLE",
+                    o_err_valid && (o_err_code == 4'd1),
+                    "illegal CFB segment code must report error 1 in the next cycle");
+        consume_error_checked();
+      end
+      read_vector_file({vector_dir, "fips_k128_enc.vec"}, 1'b0, 1'b0);
+
+      // A rejected (empty-mask) batch inside a live message is dropped without work;
+      // the same message continues after the error is accepted and the batch is resent.
+      configure_message(1'b0, key128, 3'd0, 1'b0, '0, 4'd7, cfg_cycle);
+      one_data = '0;
+      one_data[127:0] = fips_plain;
+      drive_batch(one_data, '0, 1'b1, input_cycle);
+      check_named("LANE_ERROR_NEXT_CYCLE", o_err_valid && (o_err_code == 4'd2),
+                  "empty lane mask must report error 2 in the cycle after the handshake");
+      check_named("LANE_ERROR_NO_RESULT", !o_batch_valid,
+                  "a rejected batch must not produce a result");
+      consume_error_checked();
+      one_mask = '0;
+      one_mask[0] = 1'b1;
+      drive_batch(one_data, one_mask, 1'b1, input_cycle);
+      wait_output(40, output_cycle);
+      check_named("RESEND_AFTER_LANE_ERROR_GOLDEN", o_batch_data[127:0] == fips_cipher128,
+                  "message must continue and match FIPS 197 C.1 after a rejected batch");
+      check_named("RESEND_AFTER_LANE_ERROR_LAST", o_batch_last && o_batch_lane_valid[0],
+                  "resent batch must keep last and lane 0 valid");
+      idle_window(24, "NO_EXTRA_OUTPUT_AFTER_RESEND");
+
+      // Zeroize clears the stored key schedule and leaves no stale result behind.
+      configure_message(1'b1, key256, 3'd0, 1'b0, '0, 4'd7, cfg_cycle);
+      check_named("KEY_SCHEDULE_LOADED_BEFORE_ZEROIZE",
+                  u_dut.u_aes128_256_batch_core.reg_round_keys !== 1920'b0,
+                  "round-key register must hold the configured schedule (non-vacuous check)");
+      drive_batch(one_data, one_mask, 1'b1, input_cycle);
+      repeat (2) @(negedge i_clk_core);
+      i_zeroize_req = 1'b1;
+      @(posedge i_clk_core);
+      #0.1;
+      @(negedge i_clk_core);
+      i_zeroize_req = 1'b0;
+      check_named("KEY_SCHEDULE_CLEARED_BY_ZEROIZE",
+                  u_dut.u_aes128_256_batch_core.reg_round_keys === 1920'b0,
+                  "zeroize must clear the stored round keys");
+      idle_window(40, "NO_STALE_RESULT_AFTER_ZEROIZE");
+
+      // The key schedule is also cleared when the final result leaves the IP.
+      configure_message(1'b0, key128, 3'd0, 1'b0, '0, 4'd7, cfg_cycle);
+      check_named("KEY_SCHEDULE_LOADED_BEFORE_MESSAGE_END",
+                  u_dut.u_aes128_256_batch_core.reg_round_keys !== 1920'b0,
+                  "round-key register must hold the configured schedule (non-vacuous check)");
+      drive_batch(one_data, one_mask, 1'b1, input_cycle);
+      wait_output(40, output_cycle);
+      @(posedge i_clk_core);
+      #0.1;
+      check_named("KEY_SCHEDULE_CLEARED_AT_MESSAGE_END",
+                  u_dut.u_aes128_256_batch_core.reg_round_keys === 1920'b0,
+                  "the stored round keys must be cleared when the last result is accepted");
+      @(negedge i_clk_core);
+      check_named("CFG_READY_AFTER_MESSAGE_END", o_cfg_ready,
+                  "a new configuration must be accepted after the message ends");
+    end
+  endtask
+
   task automatic run_manifest;
     integer manifest_fd;
     integer scan_count;
@@ -683,12 +1005,14 @@ module tb_aes128_256_batch;
           mask_value = LPARA_AES_LANE_NUM'(3);
           drive_batch(data_value, mask_value, 1'b1, in_cycle);
           wait_error(4'd3, "WF_CTR_WRAP_ERROR");
+          consume_error_checked();
         end else begin
           mask_value = LPARA_AES_LANE_NUM'(1);
           drive_batch(data_value, mask_value, 1'b0, in_cycle);
           wait_output(40, out_cycle);
           drive_batch(data_value, mask_value, 1'b1, in_cycle);
           wait_error(4'd3, "WF_CTR_EXHAUSTED_ERROR");
+          consume_error_checked();
         end
       end else if ((wave_name == "WF-006a_cbc_decrypt") ||
                    (wave_name == "WF-006b_cbc_decrypt")) begin
@@ -745,12 +1069,20 @@ module tb_aes128_256_batch;
           repeat (2) @(negedge i_clk_core);
           i_rst_n_core = 1'b1; i_batch_ready = 1'b1;
         end else begin
+          // Output stalled (ready low), then an invalid batch raises a pending error.
+          i_batch_ready = 1'b0;
           drive_batch(data_value, mask_value, 1'b1, in_cycle);
+          drive_batch(data_value, mask_value, 1'b0, in_cycle);
+          wait_output(40, out_cycle);
+          check_named("WF_ZEROIZE_PRECONDITION_STALLED_OUTPUT_AND_ERROR",
+                      o_batch_valid && o_err_valid && (o_err_code == 4'd5),
+                      "stalled output and pending protocol error must both exist before zeroize");
           repeat (2) @(negedge i_clk_core);
           i_zeroize_req = 1'b1;
           @(posedge i_clk_core); #0.1;
-          check_named("WF_ZEROIZE_DONE", o_zeroize_done && !o_batch_valid,
-                      "zeroize completes and clears in-flight result");
+          check_named("WF_ZEROIZE_DONE",
+                      o_zeroize_done && !o_batch_valid && !o_err_valid,
+                      "zeroize completes and clears the stalled result and the pending error");
           @(negedge i_clk_core); i_zeroize_req = 1'b0;
         end
       end else if (wave_name == "WF-002_aes128_ecb") begin
@@ -785,6 +1117,7 @@ module tb_aes128_256_batch;
       $dumpfile(dump_path);
       $dumpvars(0, tb_aes128_256_batch);
     end
+    hold_ready_low = (selected_wave == "WF-012b_zeroize_abort");
     reset_dut();
     if (selected_wave != "") begin
       run_wave_case(selected_wave, vector_dir);
@@ -792,8 +1125,11 @@ module tb_aes128_256_batch;
     end else begin
       run_manifest();
       run_error_protocol_checks();
-      check_named("MINIMUM_NAMED_ASSERTIONS", assertion_count >= 20,
-                  "the testbench must exercise at least 20 named checks");
+      run_extra_checks(vector_dir);
+      run_stream_manifest(vector_dir);
+      check_named("MINIMUM_DISTINCT_CHECK_NAMES", seen_names.num() >= 40,
+                  "the testbench must execute at least 40 distinct named checks");
+      $display("DISTINCT_CHECK_NAMES=%0d", seen_names.num());
     end
     $display("SUMMARY lanes=%0d assertions=%0d failures=%0d scenario=%0s",
              LPARA_AES_LANE_NUM, assertion_count, assertion_failures,

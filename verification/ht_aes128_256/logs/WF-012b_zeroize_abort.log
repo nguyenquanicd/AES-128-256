@@ -1,9 +1,12 @@
 ASSERT PASS cycle=1 [RESET_OUTPUTS_CLEAR]
 ASSERT PASS cycle=2 [CONFIG_HANDSHAKE]
 ASSERT PASS cycle=3 [BATCH_HANDSHAKE]
-ASSERT PASS cycle=6 [WF_ZEROIZE_DONE]
-SUMMARY lanes=4 assertions=4 failures=0 scenario=WF-012b_zeroize_abort
-- verification\tb_aes128_256_batch.sv:803: Verilog $finish
+ASSERT PASS cycle=4 [BATCH_HANDSHAKE]
+ASSERT PASS cycle=13 [OUTPUT_VALID_TIMEOUT]
+ASSERT PASS cycle=13 [WF_ZEROIZE_PRECONDITION_STALLED_OUTPUT_AND_ERROR]
+ASSERT PASS cycle=16 [WF_ZEROIZE_DONE]
+SUMMARY lanes=4 assertions=7 failures=0 scenario=WF-012b_zeroize_abort
+- C:\HQuan\102_MyGithub\AES-128-256\verification\ht_aes128_256\tb_aes128_256_batch.sv:1139: Verilog $finish
 - S i m u l a t i o n   R e p o r t: Verilator 5.053 devel
-- Verilator: $finish at 120ns; walltime 0.008 s; speed 15.678 us/s
-- Verilator: cpu 0.000 s on 1 threads; allocated 9 MB
+- Verilator: $finish at 220ns; walltime 0.055 s; speed 3.971 us/s
+- Verilator: cpu 0.016 s on 1 threads; allocated 9 MB

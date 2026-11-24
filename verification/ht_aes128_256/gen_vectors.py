@@ -120,6 +120,26 @@ def main() -> None:
         write_case(name, key_size, mode, direction, 7, keys[key_size], iv, vals)
         cases.append(name)
 
+    # Multi-batch streams: 9 blocks give two full 4-lane batches plus a one-block
+    # tail, so the context carried between batches (CTR base, CBC tail, feedback)
+    # is exercised with several active lanes. Keep every cipher mode and direction.
+    ms_rng = random.Random(0x9B10C)
+    for key_size in (0, 1):
+        key = keys[key_size]
+        for mode in ref.MODE_CODE:
+            start_iv = ctr_iv if mode == "CTR" else iv
+            for decipher in (0, 1):
+                vals = [ms_rng.getrandbits(128) for _ in range(9)]
+                name = f"ms_k{128 if key_size == 0 else 256}_{mode.lower()}_{'dec' if decipher else 'enc'}"
+                write_case(name, key_size, mode, decipher, 7, key, start_iv, vals)
+                cases.append(name)
+        # CTR whose low 32-bit field ends at its maximum without wrapping.
+        vals = [ms_rng.getrandbits(128) for _ in range(9)]
+        name = f"ms_k{128 if key_size == 0 else 256}_ctr_limit"
+        write_case(name, key_size, "CTR", 0, 7, key,
+                   int("a1b2c3d4e5f60718293a4b5cfffffff7", 16), vals, 32)
+        cases.append(name)
+
     (VECTORS / "manifest.txt").write_text("\n".join(cases) + "\n", encoding="ascii")
     print(f"Generated {len(cases)} independent vector streams in {VECTORS}")
     print("Golden-data source: aes128_256_ref.py + FIPS 197 and NIST SP 800-38A semantics")

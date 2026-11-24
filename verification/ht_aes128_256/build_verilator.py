@@ -58,8 +58,13 @@ def main() -> None:
         # Windows sandboxes deny MSYS2's named-object creation. Compile those
         # exact generated sources directly when that specific build step fails.
         main_cpp = build_dir / "Vtb_aes128_256_batch__main.cpp"
-        known_sandbox_error = "NtCreateDirectoryObject" in log_path.read_text(
-            encoding="utf-8", errors="replace")
+        build_log = log_path.read_text(encoding="utf-8", errors="replace")
+        # Known Windows failures of the generated make flow: MSYS2 named-object
+        # creation denied, no writable temporary directory, or a link error from
+        # mixing runtime objects built with different C++ settings.
+        known_sandbox_error = any(marker in build_log for marker in (
+            "NtCreateDirectoryObject", "Cannot create temporary file",
+            "ld returned", "undefined reference"))
         if not (main_cpp.exists() and known_sandbox_error):
             raise SystemExit(f"Verilator build failed; see {log_path}")
 
@@ -85,6 +90,9 @@ def main() -> None:
             *map(str, generated_cpp), *map(str, runtime_cpp),
             "-lpthread", "-latomic", "-o", str(output),
         ]
+        tmp_dir = build_dir / "tmp"
+        tmp_dir.mkdir(exist_ok=True)
+        env["TEMP"] = env["TMP"] = env["TMPDIR"] = str(tmp_dir)
         tool_bin = Path(verilator).resolve().parent
         env["PATH"] = os.pathsep.join([str(tool_bin), str(include_dir.parent),
                                       str(cxx_path.parent), env.get("PATH", "")])

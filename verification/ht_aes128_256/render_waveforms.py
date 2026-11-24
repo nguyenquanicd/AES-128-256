@@ -10,12 +10,16 @@ import subprocess
 import sys
 from pathlib import Path
 
+from compare_waveforms import compare
+
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parents[1]
 RTL_DIR = PROJECT / "rtl" / "ht_aes128_256"
 EVIDENCE = HERE / "waveforms_sim"
 LOGS = HERE / "logs"
 SPEC_WAVES = PROJECT / "doc" / "ht_aes128_256" / "figures" / "waveforms"
+
+STRUCTURE: dict[str, list[str]] = {}
 
 SCENARIOS = [
     ("WF-001_config_key_select", "WF-001_config_key_select", "WF-001_config_key_select"),
@@ -35,19 +39,21 @@ SCENARIOS = [
     ("WF-012b_zeroize_abort", "WF-012b_zeroize_abort", "WF-012b_zeroize_abort"),
 ]
 
+# WF-ID, simulated trace stems of the group, what the testbench itself checks for it.
+# The Result column is NOT written here: it comes from compare_waveforms.py.
 COMPARE_ROWS = [
-    ("WF-001", "WF-001_config_key_select", "PASS: AES-128/AES-256 config handshakes; malformed AES-128 upper key returns error 1."),
-    ("WF-002", "WF-002_aes128_ecb", "PASS: golden outputs, C10 latency, consecutive output batches (II=1)."),
-    ("WF-003", "WF-003_aes256_ecb", "PASS: golden outputs, C14 latency, consecutive output batches (II=1)."),
-    ("WF-004", "WF-004_ctr_allocate", "PASS: partial lane mask and counter-derived results match the independent model."),
-    ("WF-005", "WF-005_ctr_wrap", "PASS: wrap is rejected atomically with error 3."),
-    ("WF-006", "WF-006a_cbc_decrypt", "PASS: AES-128 and AES-256 figures generated; lane outputs match independent vectors."),
-    ("WF-007", "WF-007_cbc_encrypt_feedback", "PASS: C10 latency and C11 feedback input interval."),
-    ("WF-008", "WF-008_cfb_feedback", "PASS: C14 latency and C15 feedback input interval."),
-    ("WF-009", "WF-009_ofb_feedback", "PASS: AES-256 OFB output matches the independent model; C15 feedback interval."),
-    ("WF-010", "WF-010a_backpressure", "PASS: AES-128 and AES-256 output records remain stable during a one-cycle stall."),
-    ("WF-011", "WF-011_lane_mask_error", "PASS: invalid lane mask returns error 2; unsolicited data returns error 5."),
-    ("WF-012", "WF-012a_reset_abort", "PASS: reset abort and zeroize abort traces show cleared valid state; zeroize done pulses."),
+    ("WF-001", ["WF-001_config_key_select"], "Handshakes and error 1 only; no data compare."),
+    ("WF-002", ["WF-002_aes128_ecb"], "Golden data, C10 latency, II=1 inputs and outputs."),
+    ("WF-003", ["WF-003_aes256_ecb"], "Golden data, C14 latency, II=1 inputs and outputs."),
+    ("WF-004", ["WF-004_ctr_allocate"], "Golden data and lane mask."),
+    ("WF-005", ["WF-005_ctr_wrap"], "Error 3, error accepted and cleared; no data compare."),
+    ("WF-006", ["WF-006a_cbc_decrypt", "WF-006b_cbc_decrypt"], "Golden data, lane mask, last."),
+    ("WF-007", ["WF-007_cbc_encrypt_feedback"], "Golden data, C10 latency, C11 feedback interval."),
+    ("WF-008", ["WF-008_cfb_feedback"], "Golden data, C14 latency, C15 feedback interval."),
+    ("WF-009", ["WF-009_ofb_feedback"], "Golden data, C14 latency, C15 feedback interval."),
+    ("WF-010", ["WF-010a_backpressure", "WF-010b_backpressure"], "Golden data; output held for one stalled cycle."),
+    ("WF-011", ["WF-011_lane_mask_error"], "Error codes 2 and 5 only."),
+    ("WF-012", ["WF-012a_reset_abort", "WF-012b_zeroize_abort"], "Valid/error cleared; zeroize done pulse."),
 ]
 
 
@@ -110,19 +116,32 @@ def main() -> None:
         run([sys.executable, str(renderer), "render", str(EVIDENCE / f"{stem}.json"),
              "--out", str(EVIDENCE / f"{stem}.svg"), "--force"], cwd=HERE)
         print(f"PASS {stem}: VCD, WaveJSON and SVG")
+        findings = compare(reference, EVIDENCE / f"{stem}.json")
+        STRUCTURE[stem] = findings
+        print(f"{'MATCH' if not findings else 'DIFF '} {stem}: structure vs approved figure")
+        for line in findings:
+            print(f"      {line}")
 
     index = [
         "# Waveform comparison / waveform đối chiếu",
         "",
-        "The simulator checks interface timing and data against the approved specification scenarios and independent golden vectors. / Simulator kiểm tra thời gian giao tiếp và dữ liệu theo các kịch bản đã duyệt và vector tham chiếu độc lập.",
+        "Result is measured by compare_waveforms.py (signal presence, never-high signals, rising-edge order against the approved figure); data and latency are checked by the testbench, listed in Note. / Result do compare_waveforms.py đo (có tín hiệu, tín hiệu không bao giờ lên cao, thứ tự cạnh lên so với hình đã duyệt); dữ liệu và latency do testbench kiểm, ghi ở cột Note.",
         "",
         "| WF-ID | Specification figure | Simulated VCD | Result | Note |",
         "|---|---|---|---|---|",
     ]
-    for wid, stem, note in COMPARE_ROWS:
-        index.append(f"| {wid} | [figure](../../../doc/ht_aes128_256/figures/waveforms/{stem}.svg) | {stem}.vcd | MATCH | {note} |")
+    differences = 0
+    for wid, stems, note in COMPARE_ROWS:
+        issues = [f"{s}: {x}" for s in stems for x in STRUCTURE.get(s, ["not simulated"])]
+        result = "MATCH" if not issues else "DIFF"
+        differences += bool(issues)
+        detail = note if not issues else note + " Differences: " + "; ".join(issues)
+        index.append(f"| {wid} | [figure](../../../doc/ht_aes128_256/figures/waveforms/{stems[0]}.svg) | "
+                     f"{stems[0]}.vcd | {result} | {detail} |")
     (EVIDENCE / "waveform_compare.md").write_text("\n".join(index) + "\n", encoding="utf-8")
-    print(f"Rendered {len(SCENARIOS)} traces for the 12 approved waveform scenarios.")
+    print(f"Rendered {len(SCENARIOS)} traces for the 12 approved waveform scenarios; {differences} with structural differences.")
+    if differences:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

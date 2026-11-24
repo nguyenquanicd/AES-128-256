@@ -261,37 +261,37 @@ test-roundtrip-long: $(BUILD)/tb_aes128_roundtrip.vvp
 # -----------------------------------------------------------------------------
 # vec-<name> runs the matching file under verification/single_aes128/vectors/.
 $(VEC_TESTS): vec-%: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/$*.hex,vec_$*)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/$*.hex,vec_$*)
 
 # Generic form:  make vec VEC=rand_s1 ARGS="+JUNK=1 +SCR=31 +EARLY=3"
 VEC  ?= nist
 ARGS ?=
 vec: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/$(VEC).hex $(ARGS),vec_$(VEC)_custom)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/$(VEC).hex $(ARGS),vec_$(VEC)_custom)
 
 # Stress variants: the same golden data, but the stimulus is made hostile. The ORIGINAL design failed
 # every one of them; they prove that the inputs matter only on the start clock.
 # random junk on all inputs while the DUT is idle
 vec-nist-junk: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/nist.hex +JUNK=1,vec_nist_junk)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/nist.hex +JUNK=1,vec_nist_junk)
 # all five inputs overwritten with random values right after the start pulse, plus idle junk
 vec-rand_s1-scr: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/rand_s1.hex +SCR=31 +JUNK=1,vec_rand_s1_scr_all)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/rand_s1.hex +SCR=31 +JUNK=1,vec_rand_s1_scr_all)
 # chain_en raised 3 clocks before the first start of every stream
 vec-rand_s2-early: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/rand_s2.hex +EARLY=3,vec_rand_s2_early_chain)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/rand_s2.hex +EARLY=3,vec_rand_s2_early_chain)
 # a stray start 5 clocks after every start: must be rejected (err_busy) and not disturb the result
 vec-rand_s3-stray: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/rand_s3.hex +MID=5,vec_rand_s3_stray_start)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/rand_s3.hex +MID=5,vec_rand_s3_stray_start)
 # back-to-back operations with junk on the inputs between them
 vec-b2b-junk: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/b2b.hex +JUNK=1,vec_b2b_junk)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/b2b.hex +JUNK=1,vec_b2b_junk)
 
 # Long run (2000+ operations) with coverage-hole check, plain and with all stress options together.
 vec-long: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/long.hex +COVCHK=1,vec_long)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/long.hex +COVCHK=1,vec_long)
 vec-long-stress: $(BUILD)/tb_aes128_vec.vvp
-$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/long.hex +JUNK=1 +SCR=31 +EARLY=2 +COVCHK=1,vec_long_all_stress)
+	$(call RUN,$<,+VEC=$(SINGLE_DIR)/vectors/long.hex +JUNK=1 +SCR=31 +EARLY=2 +COVCHK=1,vec_long_all_stress)
 
 # -----------------------------------------------------------------------------
 # 8. Readable per-mode NIST testbenches (verification/single_aes128/simpleTestcase/)

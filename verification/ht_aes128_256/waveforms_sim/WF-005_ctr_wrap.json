@@ -4,11 +4,11 @@
       "tb_aes128_256_batch",
       {
         "name": "i_clk_core",
-        "wave": "0........."
+        "wave": "0..........."
       },
       {
         "name": "i_cfg_iv",
-        "wave": "=....=....",
+        "wave": "=....=......",
         "data": [
           "0",
           "112233445566778899AABBFFFFFFFF"
@@ -16,15 +16,15 @@
       },
       {
         "name": "i_batch_valid",
-        "wave": "0....10..."
+        "wave": "0....10....."
       },
       {
         "name": "o_batch_ready",
-        "wave": "0..1..0..."
+        "wave": "0..1..0.1..."
       },
       {
         "name": "i_batch_lane_valid",
-        "wave": "=....==...",
+        "wave": "=....==.....",
         "data": [
           "0",
           "3",
@@ -33,29 +33,30 @@
       },
       {
         "name": "o_batch_valid",
-        "wave": "0........."
+        "wave": "0..........."
       },
       {
         "name": "o_err_valid",
-        "wave": "0.....1..."
+        "wave": "0.....1.0..."
       },
       {
         "name": "i_err_ready",
-        "wave": "0........."
+        "wave": "0......10..."
       },
       {
         "name": "o_err_code",
-        "wave": "=.....=...",
+        "wave": "=.....=.=...",
         "data": [
           "0",
-          "3"
+          "3",
+          "0"
         ]
       },
       [
         "u_dut",
         {
           "name": "PARA_CTR_WIDTH",
-          "wave": "=.........",
+          "wave": "=...........",
           "data": [
             "20"
           ]
@@ -64,6 +65,6 @@
     ]
   ],
   "head": {
-    "text": "WF-005_ctr_wrap.vcd: t=0..90000 (1ps units), 10000 per cycle"
+    "text": "WF-005_ctr_wrap.vcd: t=0..110000 (1ps units), 10000 per cycle"
   }
 }
