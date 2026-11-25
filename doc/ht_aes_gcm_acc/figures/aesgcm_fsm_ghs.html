@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FSM: digit-serial multiplier control</title>
+  <style>body{font:16px system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#111}svg{max-width:100%;height:auto}a{color:#1457a6}</style>
+</head>
+<body>
+  <h1>FSM: digit-serial multiplier control</h1>
+  <p>Initial state: <code>ENUM_ST_GHS_IDLE</code></p>
+  <p>Reset entry: <code>i_rst_n_core</code> active-low.</p>
+  <figure><svg xmlns="http://www.w3.org/2000/svg" width="760" height="548" viewBox="10 30 760 548" font-family="Arial, Helvetica, sans-serif" font-size="18">
+<rect x="10" y="30" width="760" height="548" fill="#FFFFFF"/>
+<ellipse cx="270" cy="180" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="270" y="187" text-anchor="middle">ENUM_ST_GHS_IDLE</text>
+<ellipse cx="270" cy="360" rx="105" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="270" y="367" text-anchor="middle">ENUM_ST_GHS_RUN</text>
+<ellipse cx="630" cy="360" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="630" y="367" text-anchor="middle">ENUM_ST_GHS_DONE</text>
+<rect x="40" y="430" width="520" height="118" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="44" y="474" text-anchor="start">GLOBAL NEXT-STATE CONTROL</text>
+<text x="44" y="496" text-anchor="start">G1  ANY STATE -&gt; ENUM_ST_GHS_IDLE</text>
+<text x="44" y="518" text-anchor="start">Abort forces idle.</text>
+<path d="M 270 60 L 270 62.4161 L 270 65.4398 L 270 68.9844 L 270 72.963 L 270 77.2888 L 270 81.875 L 270 86.6348 L 270 91.4815 L 270 96.3281 L 270 101.088 L 270 105.674 L 270 110 L 270 114.326 L 270 118.912 L 270 123.672 L 270 128.519 L 270 133.365 L 270 138.125 L 270 142.711 L 270 147.037 L 270 151.016 L 270 154.56 L 270 157.584 L 270 160" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="270,160 264,148 276,148" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="167" y="96" width="206" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="270" y="117" text-anchor="middle">i_rst_n_core == 1'b0</text>
+<path d="M 592.408 341.204 L 586.138 336.541 L 578.39 330.507 L 569.352 323.343 L 559.214 315.29 L 548.165 306.587 L 536.393 297.474 L 524.088 288.192 L 511.439 278.98 L 498.635 270.079 L 485.864 261.728 L 473.316 254.168 L 461.18 247.639 L 448.675 241.847 L 435.098 236.345 L 420.755 231.139 L 405.952 226.236 L 390.993 221.644 L 376.184 217.37 L 361.831 213.42 L 348.239 209.803 L 335.714 206.524 L 324.56 203.592 L 315.085 201.014 L 307.592 198.796" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="307.592,198.796 320.801,196.448 317.395,207.955" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="397.78" y="233.639" width="126.8" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="461.18" y="254.639" text-anchor="middle">result taken</text>
+<path d="M 375 360 L 378.64 360 L 383.218 360 L 388.594 360 L 394.63 360 L 401.186 360 L 408.125 360 L 415.307 360 L 422.593 360 L 429.844 360 L 436.921 360 L 443.686 360 L 450 360 L 456.231 360 L 462.766 360 L 469.492 360 L 476.296 360 L 483.066 360 L 489.688 360 L 496.049 360 L 502.037 360 L 507.539 360 L 512.442 360 L 516.633 360 L 520 360" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="520,360 508,366 508,354" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="394" y="346" width="107" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="447.5" y="367" text-anchor="middle">last digit</text>
+<path d="M 380 180 L 374.334 179.491 L 366.759 178.148 L 357.656 176.25 L 347.407 174.074 L 336.395 171.898 L 325 170 L 313.605 168.657 L 302.593 168.148 L 292.344 168.75 L 283.241 170.741 L 275.666 174.398 L 270 180 L 266.149 188.241 L 263.634 199.259 L 262.266 212.5 L 261.852 227.407 L 262.202 243.426 L 263.125 260 L 264.43 276.574 L 265.926 292.593 L 267.422 307.5 L 268.727 320.741 L 269.65 331.759 L 270 340" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="270,340 263.496,328.266 275.485,327.756" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="168.951" y="230.862" width="146.6" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="242.251" y="251.862" text-anchor="middle">operands valid</text>
+<path d="M 204 164 L 196.583 163.898 L 186.667 163.63 L 174.75 163.25 L 161.333 162.815 L 146.917 162.38 L 132 162 L 117.083 161.731 L 102.667 161.63 L 89.25 161.75 L 77.3333 162.148 L 67.4167 162.88 L 60 164 L 54.5 165.648 L 50 167.852 L 46.5 170.5 L 44 173.481 L 42.5 176.685 L 42 180 L 42.5 183.315 L 44 186.519 L 46.5 189.5 L 50 192.148 L 54.5 194.352 L 60 196 L 67.4167 197.12 L 77.3333 197.852 L 89.25 198.25 L 102.667 198.37 L 117.083 198.269 L 132 198 L 146.917 197.62 L 161.333 197.185 L 174.75 196.75 L 186.667 196.37 L 196.583 196.102 L 204 196" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="204,196 192.084,202.164 191.919,190.165" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 207 344 L 199.686 343.898 L 189.907 343.63 L 178.156 343.25 L 164.926 342.815 L 150.709 342.38 L 136 342 L 121.291 341.731 L 107.074 341.63 L 93.8438 341.75 L 82.0926 342.148 L 72.3137 342.88 L 65 344 L 59.5764 345.648 L 55.1389 347.852 L 51.6875 350.5 L 49.2222 353.481 L 47.7431 356.685 L 47.25 360 L 47.7431 363.315 L 49.2222 366.519 L 51.6875 369.5 L 55.1389 372.148 L 59.5764 374.352 L 65 376 L 72.3137 377.12 L 82.0926 377.852 L 93.8438 378.25 L 107.074 378.37 L 121.291 378.269 L 136 378 L 150.709 377.62 L 164.926 377.185 L 178.156 376.75 L 189.907 376.37 L 199.686 376.102 L 207 376" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="207,376 195.085,382.167 194.918,370.168" fill="#000000" stroke="#000000" stroke-width="1"/>
+</svg>
+<figcaption>Editable source: <a href="aesgcm_fsm_ghs.drawio">digit-serial multiplier control.drawio</a> | <a href="aesgcm_fsm_ghs.json">digit-serial multiplier control.json</a></figcaption></figure>
+  <section><h2>Global Next-State Control</h2><ul>
+    <li><code>G1: ANY STATE -&gt; ENUM_ST_GHS_IDLE</code>; guard <code>w_cmd_abort</code> <span>Abort forces idle.</span></li>
+  </ul></section>
+  <section><h2>Transition and Global State Control Mapping</h2><table><thead><tr><th>Kind</th><th>Label / effect</th><th>Boolean expression</th></tr></thead><tbody>
+    <tr><td>Transition</td><td>operands valid</td><td><code>i_valid &amp;&amp; o_ready</code></td></tr>
+    <tr><td>Transition</td><td>last digit</td><td><code>w_digit_cnt == LPARA_DIGIT_LAST</code></td></tr>
+    <tr><td>Transition</td><td>result taken</td><td><code>1&#x27;b1</code></td></tr>
+    <tr><td>Global control</td><td>G1: ANY STATE -&gt; ENUM_ST_GHS_IDLE</td><td><code>w_cmd_abort</code></td></tr>
+  </tbody></table></section>
+</body>
+</html>

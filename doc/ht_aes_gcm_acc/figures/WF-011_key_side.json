@@ -1,0 +1,50 @@
+{
+ "head": {
+  "text": "WF-011 Key side-load: success and time-out (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p......................."
+  },
+  {
+   "name": "i_key_side_valid",
+   "wave": "0..1..0................."
+  },
+  {
+   "name": "o_key_side_ack",
+   "wave": "0....10................."
+  },
+  {
+   "name": "key_ld",
+   "wave": "0.....1................."
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=.=...=..=..=........==.",
+   "data": [
+    "IDLE",
+    "KEY",
+    "SU_CFG",
+    "IDLE",
+    "KEY",
+    "FIN",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "keywait_expired",
+   "wave": "0...................1.0."
+  },
+  {
+   "name": "irq_raw_kerr",
+   "wave": "0.....................1."
+  }
+ ],
+ "foot": {
+  "text": "Left: valid is seen, the key is captured and acknowledged for one clock. Right: valid never rises, the wait expires and KEY_ERR is raised."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

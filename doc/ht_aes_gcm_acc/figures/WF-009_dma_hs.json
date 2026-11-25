@@ -1,0 +1,41 @@
+{
+ "head": {
+  "text": "WF-009 DMA four-phase handshake on the input and output channels (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p................."
+  },
+  {
+   "name": "o_dma_in_req",
+   "wave": "0.1.......0......."
+  },
+  {
+   "name": "i_dma_in_ack",
+   "wave": "0.......1...0....."
+  },
+  {
+   "name": "fifo_in_room_burst",
+   "wave": "0.1.......0......."
+  },
+  {
+   "name": "o_dma_out_req",
+   "wave": "0....1.........0.."
+  },
+  {
+   "name": "i_dma_out_ack",
+   "wave": "0............1...0"
+  },
+  {
+   "name": "fifo_out_has_burst",
+   "wave": "0....1.........0.."
+  }
+ ],
+ "foot": {
+  "text": "Request rises when a full burst fits (input) or is available (output), stays until acknowledge (burst done), falls, then acknowledge falls before a new request."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

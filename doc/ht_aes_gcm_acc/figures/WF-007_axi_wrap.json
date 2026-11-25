@@ -1,0 +1,63 @@
+{
+ "head": {
+  "text": "WF-007 AXI4 WRAP write burst answered with SLVERR (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p............."
+  },
+  {
+   "name": "i_axi_awvalid",
+   "wave": "01.0.........."
+  },
+  {
+   "name": "o_axi_awready",
+   "wave": "0.10.........."
+  },
+  {
+   "name": "i_axi_awburst",
+   "wave": "x=............",
+   "data": [
+    "WRAP"
+   ]
+  },
+  {
+   "name": "i_axi_wvalid",
+   "wave": "0..1..0......."
+  },
+  {
+   "name": "o_axi_wready",
+   "wave": "0..1..0......."
+  },
+  {
+   "name": "i_axi_wlast",
+   "wave": "0....10......."
+  },
+  {
+   "name": "fifo_push",
+   "wave": "0............."
+  },
+  {
+   "name": "o_axi_bvalid",
+   "wave": "0.....1.0....."
+  },
+  {
+   "name": "i_axi_bready",
+   "wave": "0......10....."
+  },
+  {
+   "name": "o_axi_bresp",
+   "wave": "x.....=.......",
+   "data": [
+    "SLVERR"
+   ]
+  }
+ ],
+ "foot": {
+  "text": "The illegal burst is consumed without pushing data and the response is SLVERR; the input FIFO is unchanged."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

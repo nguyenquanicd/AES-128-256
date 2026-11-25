@@ -1,0 +1,60 @@
+{
+ "head": {
+  "text": "WF-021 Context export through aesgcm_ctxx_0..23 after suspend (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p......................."
+  },
+  {
+   "name": "fsm_ctx_state",
+   "wave": "=.=...................=.",
+   "data": [
+    "IDLE",
+    "XFER",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "i_apb_psel",
+   "wave": "0..1.0...1.0...1.0......"
+  },
+  {
+   "name": "i_apb_penable",
+   "wave": "0...10....10....10......"
+  },
+  {
+   "name": "apb_ctxx_index",
+   "wave": "x..=.....=.....=........",
+   "data": [
+    "ctxx_0",
+    "ctxx_1",
+    "ctxx_2"
+   ]
+  },
+  {
+   "name": "cdc007_req",
+   "wave": "0.1.0...1.0...1.0......."
+  },
+  {
+   "name": "cdc007_ack",
+   "wave": "0....1.0...1.0...1.0...."
+  },
+  {
+   "name": "o_apb_prdata",
+   "wave": "x...=.....=.....=.......",
+   "data": [
+    "W0",
+    "W1",
+    "W2"
+   ]
+  }
+ ],
+ "foot": {
+  "text": "Each APB read of an aesgcm_ctxx register is served by a word transfer from the core domain; the context image leaves the IP only when PARA_GCM_CTX_MODE = 1 and the pin is low."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

@@ -1,0 +1,62 @@
+{
+ "head": {
+  "text": "WF-014 Zeroize of keys, state and AES core (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p......................."
+  },
+  {
+   "name": "cmd_zeroize",
+   "wave": "0...10.................."
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=....=..............=...",
+   "data": [
+    "PAY",
+    "ABRT",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "key_store",
+   "wave": "=.....=.................",
+   "data": [
+    "K",
+    "0"
+   ]
+  },
+  {
+   "name": "ctx_slots",
+   "wave": "=......=................",
+   "data": [
+    "S",
+    "0"
+   ]
+  },
+  {
+   "name": "ghash_state",
+   "wave": "=.....=.................",
+   "data": [
+    "Y",
+    "0"
+   ]
+  },
+  {
+   "name": "aes_core_zeroize",
+   "wave": "0....1...0.............."
+  },
+  {
+   "name": "sts_zeroized",
+   "wave": "0...................1..."
+  }
+ ],
+ "foot": {
+  "text": "All key-derived storage is cleared and aesgcm_sts.zeroized reports completion; completion is within 64 core clocks."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

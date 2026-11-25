@@ -1,0 +1,53 @@
+{
+ "head": {
+  "text": "WF-003 Policy A pass 1 with a wrong tag: TAG_FAIL and no output (CORE then BUS)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p..........................."
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=...=.....==..==............",
+   "data": [
+    "AAD",
+    "PAY",
+    "LEN",
+    "TAG",
+    "FIN",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "ghash_valid",
+   "wave": "1..........0................"
+  },
+  {
+   "name": "out_fifo_push",
+   "wave": "0..........................."
+  },
+  {
+   "name": "tag_match",
+   "wave": "0..........................."
+  },
+  {
+   "name": "ver_ok",
+   "wave": "0..........................."
+  },
+  {
+   "name": "irq_raw_tagf",
+   "wave": "0..................1........"
+  },
+  {
+   "name": "o_int_aesgcm",
+   "wave": "0...................1......."
+  }
+ ],
+ "foot": {
+  "text": "A wrong tag leaves ver_ok low, writes no byte to the output FIFO, and raises TAG_FAIL after the status bundle crosses to the BUS domain. Illustrative."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

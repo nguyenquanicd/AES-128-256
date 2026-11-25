@@ -1,0 +1,76 @@
+{
+ "page_name": "FSM_HSK",
+ "out_name": "aesgcm_fsm_hsk.drawio",
+ "function": "four-phase requester",
+ "initial": "ENUM_ST_HSK_IDLE",
+ "reset": {
+  "signal": "i_rst_n_bus",
+  "active_level": "low"
+ },
+ "states": [
+  {
+   "name": "ENUM_ST_HSK_IDLE",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_HSK_REQ",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_HSK_REL",
+   "conditional_exit": true,
+   "hold_conditions": []
+  }
+ ],
+ "transitions": [
+  {
+   "src": "ENUM_ST_HSK_IDLE",
+   "dst": "ENUM_ST_HSK_IDLE",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_HSK_REQ",
+   "dst": "ENUM_ST_HSK_REQ",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_HSK_REL",
+   "dst": "ENUM_ST_HSK_REL",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_HSK_IDLE",
+   "dst": "ENUM_ST_HSK_REQ",
+   "label": "condition true"
+  },
+  {
+   "src": "ENUM_ST_HSK_REQ",
+   "dst": "ENUM_ST_HSK_REL",
+   "label": "ack seen"
+  },
+  {
+   "src": "ENUM_ST_HSK_REL",
+   "dst": "ENUM_ST_HSK_IDLE",
+   "label": "ack low"
+  }
+ ],
+ "condition_aliases": [
+  {
+   "label": "condition true",
+   "expression": "w_channel_cond"
+  },
+  {
+   "label": "ack seen",
+   "expression": "w_ack_sync"
+  },
+  {
+   "label": "ack low",
+   "expression": "!w_ack_sync"
+  }
+ ],
+ "layout": {
+  "margin": 160
+ }
+}

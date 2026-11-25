@@ -1,0 +1,71 @@
+{
+ "page_name": "FSM_HSR",
+ "out_name": "aesgcm_fsm_hsr.drawio",
+ "function": "four-phase responder",
+ "initial": "ENUM_ST_HSR_IDLE",
+ "reset": {
+  "signal": "i_rst_n_core",
+  "active_level": "low"
+ },
+ "states": [
+  {
+   "name": "ENUM_ST_HSR_IDLE",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_HSR_CAP",
+   "conditional_exit": false,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_HSR_ACK",
+   "conditional_exit": true,
+   "hold_conditions": []
+  }
+ ],
+ "transitions": [
+  {
+   "src": "ENUM_ST_HSR_IDLE",
+   "dst": "ENUM_ST_HSR_IDLE",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_HSR_ACK",
+   "dst": "ENUM_ST_HSR_ACK",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_HSR_IDLE",
+   "dst": "ENUM_ST_HSR_CAP",
+   "label": "request"
+  },
+  {
+   "src": "ENUM_ST_HSR_CAP",
+   "dst": "ENUM_ST_HSR_ACK",
+   "label": "captured"
+  },
+  {
+   "src": "ENUM_ST_HSR_ACK",
+   "dst": "ENUM_ST_HSR_IDLE",
+   "label": "request low"
+  }
+ ],
+ "condition_aliases": [
+  {
+   "label": "request",
+   "expression": "w_req_sync"
+  },
+  {
+   "label": "captured",
+   "expression": "1'b1"
+  },
+  {
+   "label": "request low",
+   "expression": "!w_req_sync"
+  }
+ ],
+ "layout": {
+  "margin": 160
+ }
+}

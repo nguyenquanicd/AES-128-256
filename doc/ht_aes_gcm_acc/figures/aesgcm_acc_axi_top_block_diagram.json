@@ -1,0 +1,271 @@
+{
+  "page_name": "BLOCK_DIAGRAM",
+  "out_name": "aesgcm_acc_axi_top_block_diagram.drawio",
+  "table_suffix": "",
+  "layout": {
+    "gap_h": 110,
+    "gap_v": 100,
+    "margin": 40,
+    "block_h": 70
+  },
+  "top": {
+    "frame_label": [
+      "AES-GCM ACCELERATOR",
+      "(m_aesgcm_acc_axi_top)"
+    ],
+    "block_label": [
+      "AES-GCM ACCELERATOR",
+      "(m_aesgcm_acc_axi_top)"
+    ],
+    "block_row": [
+      "AES-GCM ACCELERATOR (m_aesgcm_acc_axi_top)",
+      "Structural top of the accelerator with the AXI window.",
+      "Section 14.2"
+    ]
+  },
+  "frame_row": [
+    "AES-GCM ACCELERATOR (m_aesgcm_acc_axi_top) frame",
+    "Structural top that holds the register block, the bus window, the bus-domain control, the crossings and the core-domain datapath.",
+    "Section 14.2"
+  ],
+  "frame_interfaces": [
+    "APB",
+    "AXI",
+    "DMA",
+    "INT",
+    "KEY",
+    "SEC",
+    "CRCLK"
+  ],
+  "blocks": [
+    {
+      "key": "A",
+      "label": [
+        "u_csr",
+        "(m_vlsit_csr_aesgcm)"
+      ],
+      "width": 200,
+      "row": 1,
+      "col": 0,
+      "row_name": "u_csr (m_vlsit_csr_aesgcm)",
+      "function": "Register block that holds configuration, status, events and the programmed-input/output event sideband.",
+      "source": "Section 11"
+    },
+    {
+      "key": "B",
+      "label": [
+        "u_bus_dom",
+        "(m_aesgcm_bus_dom)"
+      ],
+      "width": 200,
+      "row": 1,
+      "col": 1,
+      "row_name": "u_bus_dom (m_aesgcm_bus_dom)",
+      "function": "Bus-domain control: decodes commands, checks the configuration, takes the configuration snapshot, forms events and the interrupt, drives the programmed-input/output path and the DMA request channels, and holds the bus subordinate of the data window.",
+      "source": "Section 5.1, 6.3.2, 14.2"
+    },
+    {
+      "key": "D",
+      "label": [
+        "u_xing",
+        "(m_aesgcm_xing)"
+      ],
+      "width": 200,
+      "row": 0,
+      "col": 1,
+      "row_name": "u_xing (m_aesgcm_xing)",
+      "function": "Clock-domain crossings: configuration and status bundles, command events and the two width-converting data FIFOs.",
+      "source": "Section 7.2"
+    },
+    {
+      "key": "E",
+      "label": [
+        "u_core_dom",
+        "(m_aesgcm_core_dom)"
+      ],
+      "width": 200,
+      "row": 0,
+      "col": 0,
+      "row_name": "u_core_dom (m_aesgcm_core_dom)",
+      "function": "Core-domain datapath: message sequencer, key select, block formatting, authentication hash, tag logic, context store and the AES core.",
+      "source": "Section 5.1, 5.3"
+    }
+  ],
+  "connectors": [
+    {
+      "id": "REG",
+      "src": "A",
+      "src_side": "R",
+      "dst": "B",
+      "dst_side": "L"
+    },
+    {
+      "id": "CMD",
+      "src": "B",
+      "src_side": "R",
+      "dst": "D",
+      "dst_side": "R"
+    },
+    {
+      "id": "XB",
+      "src": "D",
+      "src_side": "L",
+      "dst": "E",
+      "dst_side": "R"
+    }
+  ],
+  "externals": [
+    {
+      "id": "APB",
+      "block": "A",
+      "side": "L",
+      "dir": "in",
+      "pos": 0,
+      "text": [
+        "APB",
+        "i_apb_*"
+      ]
+    },
+    {
+      "id": "AXI",
+      "block": "B",
+      "side": "B",
+      "dir": "in",
+      "pos": 0,
+      "text": [
+        "AXI",
+        "i_axi_*"
+      ]
+    },
+    {
+      "id": "DMA",
+      "block": "B",
+      "side": "B",
+      "dir": "out",
+      "pos": 1,
+      "text": [
+        "DMA",
+        "o_dma_*, i_dma_*"
+      ]
+    },
+    {
+      "id": "INT",
+      "block": "B",
+      "side": "B",
+      "dir": "out",
+      "pos": 2,
+      "text": [
+        "INT",
+        "o_int_aesgcm"
+      ]
+    },
+    {
+      "id": "KEY",
+      "block": "E",
+      "side": "L",
+      "dir": "in",
+      "pos": 0,
+      "text": [
+        "KEY",
+        "i_key_side*"
+      ]
+    },
+    {
+      "id": "SEC",
+      "block": "E",
+      "side": "T",
+      "dir": "in",
+      "pos": 0,
+      "text": [
+        "SEC",
+        "i_gcm_secure_only"
+      ]
+    },
+    {
+      "id": "CRCLK",
+      "block": "A",
+      "side": "B",
+      "dir": "in",
+      "pos": 0,
+      "text": [
+        "CRCLK",
+        "i_clk_*, i_rst_n_*"
+      ]
+    }
+  ],
+  "nets": [],
+  "interfaces": [
+    {
+      "id": "APB",
+      "name": "Register bus",
+      "category": "custom",
+      "active": "external -> u_csr",
+      "signals": "external -> TOP: i_apb_psel, i_apb_penable, i_apb_pwrite, i_apb_paddr, i_apb_pwdata, i_apb_pstrb, i_apb_pprot; TOP -> external: o_apb_pready, o_apb_prdata, o_apb_pslverr; i_protect_en, i_slverr_en"
+    },
+    {
+      "id": "AXI",
+      "name": "Data window bus",
+      "category": "custom",
+      "active": "external -> u_bus_dom",
+      "signals": "write and read address, data, response channels of the subordinate profile (section 6.2)"
+    },
+    {
+      "id": "DMA",
+      "name": "Direct-memory-access handshake",
+      "category": "handshake",
+      "active": "u_bus_dom -> external",
+      "signals": "TOP -> external: o_dma_in_req, o_dma_out_req; external -> TOP: i_dma_in_ack, i_dma_out_ack"
+    },
+    {
+      "id": "INT",
+      "name": "Interrupt",
+      "category": "custom",
+      "active": "u_bus_dom -> external",
+      "signals": "TOP -> external: o_int_aesgcm"
+    },
+    {
+      "id": "KEY",
+      "name": "Key side-load",
+      "category": "handshake",
+      "active": "external -> u_core_dom",
+      "signals": "external -> TOP: i_key_side_valid, i_key_side_size, i_key_side; TOP -> external: o_key_side_ack"
+    },
+    {
+      "id": "SEC",
+      "name": "Secure-only control",
+      "category": "custom",
+      "active": "external -> u_core_dom",
+      "signals": "external -> TOP: i_gcm_secure_only"
+    },
+    {
+      "id": "CRCLK",
+      "name": "Clocks, resets and test control",
+      "category": "custom",
+      "active": "SoC -> TOP",
+      "signals": "i_clk_bus, i_clk_core, i_rst_n_bus, i_rst_n_core, i_dft_scan_mode, i_dft_scan_rst_n"
+    },
+    {
+      "id": "REG",
+      "name": "Register field interface",
+      "category": "custom",
+      "active": "u_csr <-> u_bus_dom",
+      "signals": "u_csr -> u_bus_dom: register-field controls and sideband events; u_bus_dom -> u_csr: status and hardware loads"
+    },
+    {
+      "id": "CMD",
+      "name": "Bus-side interface of the crossings",
+      "category": "custom",
+      "active": "u_bus_dom <-> u_xing",
+      "signals": "u_bus_dom -> u_xing: configuration snapshot, commands, input stream beats and push, output stream pop; u_xing -> u_bus_dom: status bundle, output stream beats, FIFO levels"
+    },
+    {
+      "id": "XB",
+      "name": "Core-side bundles and blocks",
+      "category": "custom",
+      "active": "u_xing <-> u_core_dom",
+      "signals": "u_xing -> u_core_dom: configuration bundle, commands, input blocks; u_core_dom -> u_xing: status bundle, output blocks"
+    }
+  ],
+  "legend_note": "The enclosing frame is the top module; blocks inside are its instances. The reset synchronizers sit at the frame boundary and are described by the CRCLK interface.",
+  "library_sha256": "15DFB183E267D2A94F8CAB316E01EB3D2E9D2F9C006DC816790A394F4123506C"
+}

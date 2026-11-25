@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FSM: AXI4 read window</title>
+  <style>body{font:16px system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#111}svg{max-width:100%;height:auto}a{color:#1457a6}</style>
+</head>
+<body>
+  <h1>FSM: AXI4 read window</h1>
+  <p>Initial state: <code>ENUM_ST_AXR_IDLE</code></p>
+  <p>Reset entry: <code>i_rst_n_bus</code> active-low.</p>
+  <figure><svg xmlns="http://www.w3.org/2000/svg" width="2028.26" height="990.66" viewBox="-168 105.556 2028.26 990.66" font-family="Arial, Helvetica, sans-serif" font-size="18">
+<rect x="-168" y="105.556" width="2028.26" height="990.66" fill="#FFFFFF"/>
+<ellipse cx="270" cy="330" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="270" y="337" text-anchor="middle">ENUM_ST_AXR_IDLE</text>
+<ellipse cx="805" cy="330" rx="105" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="805" y="337" text-anchor="middle">ENUM_ST_AXR_CHK</text>
+<ellipse cx="1340" cy="180" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1340" y="187" text-anchor="middle">ENUM_ST_AXR_DATA</text>
+<ellipse cx="1340" cy="480" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1340" y="487" text-anchor="middle">ENUM_ST_AXR_DROP</text>
+<ellipse cx="1340" cy="780" rx="105" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1340" y="787" text-anchor="middle">ENUM_ST_AXR_END</text>
+<path d="M 270 180 L 270 183.141 L 270 187.072 L 270 191.68 L 270 196.852 L 270 202.475 L 270 208.438 L 270 214.625 L 270 220.926 L 270 227.227 L 270 233.414 L 270 239.376 L 270 245 L 270 250.624 L 270 256.586 L 270 262.773 L 270 269.074 L 270 275.375 L 270 281.562 L 270 287.525 L 270 293.148 L 270 298.32 L 270 302.928 L 270 306.859 L 270 310" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="270,310 264,298 276,298" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="171.95" y="231" width="196.1" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="270" y="252" text-anchor="middle">i_rst_n_bus == 1'b0</text>
+<path d="M 1296.68 761.781 L 1274.31 748.516 L 1246.53 731.386 L 1214.07 711.063 L 1177.65 688.217 L 1137.99 663.52 L 1095.82 637.642 L 1051.85 611.254 L 1006.81 585.028 L 961.416 559.633 L 916.397 535.742 L 872.472 514.025 L 830.364 495.153 L 787.424 478.257 L 741.181 462.053 L 692.619 446.588 L 642.722 431.908 L 592.475 418.06 L 542.863 405.091 L 494.87 393.048 L 449.48 381.978 L 407.679 371.927 L 370.451 362.942 L 338.78 355.07 L 313.651 348.358" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="313.651,348.358 326.793,345.658 323.696,357.251" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="766.964" y="481.153" width="126.8" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="830.364" y="502.153" text-anchor="middle">burst closed</text>
+<path d="M 1450 180 L 1463.13 178.09 L 1480.69 173.056 L 1501.8 165.938 L 1525.56 157.778 L 1551.09 149.618 L 1577.5 142.5 L 1603.91 137.465 L 1629.44 135.556 L 1653.2 137.812 L 1674.31 145.278 L 1691.87 158.993 L 1705 180 L 1714.76 210.903 L 1722.77 252.222 L 1729.02 301.875 L 1733.52 357.778 L 1736.24 417.847 L 1737.19 480 L 1736.34 542.153 L 1733.7 602.222 L 1729.26 658.125 L 1723 707.778 L 1714.91 749.097 L 1705 780 L 1691.61 801.007 L 1673.7 814.722 L 1652.19 822.188 L 1627.96 824.444 L 1601.93 822.535 L 1575 817.5 L 1548.07 810.382 L 1522.04 802.222 L 1497.81 794.062 L 1476.3 786.944 L 1458.39 781.91 L 1445 780" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1445,780 1457.73,775.754 1456.03,787.634" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1644.06" y="468.361" width="186.2" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1737.16" y="489.361" text-anchor="middle">last beat accepted</text>
+<path d="M 910 330 L 932.147 329.523 L 961.759 328.264 L 997.344 326.484 L 1037.41 324.444 L 1080.46 322.405 L 1125 320.625 L 1169.54 319.366 L 1212.59 318.889 L 1252.66 319.453 L 1288.24 321.319 L 1317.85 324.748 L 1340 330 L 1354.7 337.726 L 1363.61 348.056 L 1367.66 360.469 L 1367.78 374.444 L 1364.91 389.462 L 1360 405 L 1353.98 420.538 L 1347.78 435.556 L 1342.34 449.531 L 1338.61 461.944 L 1337.52 472.274 L 1340 480 L 1345.67 485.252 L 1353.24 488.681 L 1362.34 490.547 L 1372.59 491.111 L 1383.61 490.634 L 1395 489.375 L 1406.39 487.595 L 1417.41 485.556 L 1427.66 483.516 L 1436.76 481.736 L 1444.33 480.477 L 1450 480" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1450,480 1438.55,486.986 1437.54,475.029" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1198.02" y="306.172" width="136.7" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1266.37" y="327.172" text-anchor="middle">illegal burst</text>
+<path d="M 805 310 L 803.297 307.167 L 798.808 303.38 L 792.461 298.828 L 785.185 293.704 L 777.909 288.197 L 771.562 282.5 L 767.073 276.803 L 765.37 271.296 L 767.383 266.172 L 774.039 261.62 L 786.269 257.833 L 805 255 L 832.555 253.249 L 869.398 252.454 L 913.672 252.422 L 963.519 252.963 L 1017.08 253.886 L 1072.5 255 L 1127.92 256.114 L 1181.48 257.037 L 1231.33 257.578 L 1275.6 257.546 L 1312.45 256.751 L 1340 255 L 1358.73 252.167 L 1370.96 248.38 L 1377.62 243.828 L 1379.63 238.704 L 1377.93 233.197 L 1373.44 227.5 L 1367.09 221.803 L 1359.81 216.296 L 1352.54 211.172 L 1346.19 206.62 L 1341.7 202.833 L 1340 200" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1340,200 1351.32,207.194 1341.04,213.376" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1014.05" y="241" width="116.9" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1072.5" y="262" text-anchor="middle">legal burst</text>
+<path d="M 380 330 L 387.595 330 L 397.078 330 L 408.184 330 L 420.648 330 L 434.206 330 L 448.594 330 L 463.545 330 L 478.796 330 L 494.082 330 L 509.138 330 L 523.699 330 L 537.5 330 L 551.384 330 L 566.175 330 L 581.582 330 L 597.315 330 L 613.082 330 L 628.594 330 L 643.558 330 L 657.685 330 L 670.684 330 L 682.263 330 L 692.132 330 L 700 330" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="700,330 688,336 688,324" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="456.8" y="316" width="166.4" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="540" y="337" text-anchor="middle">address accepted</text>
+<path d="M 1340 500 L 1340 529.67 L 1340 570.417 L 1340 619.844 L 1340 675.556 L 1340 735.156 L 1340 796.25 L 1340 856.441 L 1340 913.333 L 1340 964.531 L 1340 1007.64 L 1340 1040.26 L 1340 1060 L 1340 1066.22 L 1340 1061.11 L 1340 1046.56 L 1340 1024.44 L 1340 996.632 L 1340 965 L 1340 931.424 L 1340 897.778 L 1340 865.938 L 1340 837.778 L 1340 815.174 L 1340 800" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1340,800 1346,812 1334,812" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1246.9" y="902.215" width="186.2" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1340" y="923.215" text-anchor="middle">last beat accepted</text>
+<path d="M 204 314 L 188.343 313.898 L 167.407 313.63 L 142.25 313.25 L 113.926 312.815 L 83.4907 312.38 L 52 312 L 20.5093 311.731 L -9.92593 311.63 L -38.25 311.75 L -63.4074 312.148 L -84.3426 312.88 L -100 314 L -111.611 315.648 L -121.111 317.852 L -128.5 320.5 L -133.778 323.481 L -136.944 326.685 L -138 330 L -136.944 333.315 L -133.778 336.519 L -128.5 339.5 L -121.111 342.148 L -111.611 344.352 L -100 346 L -84.3426 347.12 L -63.4074 347.852 L -38.25 348.25 L -9.92593 348.37 L 20.5093 348.269 L 52 348 L 83.4907 347.62 L 113.926 347.185 L 142.25 346.75 L 167.407 346.37 L 188.343 346.102 L 204 346" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="204,346 192.039,352.078 191.961,340.078" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 1274 164 L 1258.34 163.898 L 1237.41 163.63 L 1212.25 163.25 L 1183.93 162.815 L 1153.49 162.38 L 1122 162 L 1090.51 161.731 L 1060.07 161.63 L 1031.75 161.75 L 1006.59 162.148 L 985.657 162.88 L 970 164 L 958.389 165.648 L 948.889 167.852 L 941.5 170.5 L 936.222 173.481 L 933.056 176.685 L 932 180 L 933.056 183.315 L 936.222 186.519 L 941.5 189.5 L 948.889 192.148 L 958.389 194.352 L 970 196 L 985.657 197.12 L 1006.59 197.852 L 1031.75 198.25 L 1060.07 198.37 L 1090.51 198.269 L 1122 198 L 1153.49 197.62 L 1183.93 197.185 L 1212.25 196.75 L 1237.41 196.37 L 1258.34 196.102 L 1274 196" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1274,196 1262.04,202.078 1261.96,190.078" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 1274 464 L 1258.34 463.898 L 1237.41 463.63 L 1212.25 463.25 L 1183.93 462.815 L 1153.49 462.38 L 1122 462 L 1090.51 461.731 L 1060.07 461.63 L 1031.75 461.75 L 1006.59 462.148 L 985.657 462.88 L 970 464 L 958.389 465.648 L 948.889 467.852 L 941.5 470.5 L 936.222 473.481 L 933.056 476.685 L 932 480 L 933.056 483.315 L 936.222 486.519 L 941.5 489.5 L 948.889 492.148 L 958.389 494.352 L 970 496 L 985.657 497.12 L 1006.59 497.852 L 1031.75 498.25 L 1060.07 498.37 L 1090.51 498.269 L 1122 498 L 1153.49 497.62 L 1183.93 497.185 L 1212.25 496.75 L 1237.41 496.37 L 1258.34 496.102 L 1274 496" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1274,496 1262.04,502.078 1261.96,490.078" fill="#000000" stroke="#000000" stroke-width="1"/>
+</svg>
+<figcaption>Editable source: <a href="aesgcm_fsm_axr.drawio">AXI4 read window.drawio</a> | <a href="aesgcm_fsm_axr.json">AXI4 read window.json</a></figcaption></figure>
+  <section><h2>Transition and Global State Control Mapping</h2><table><thead><tr><th>Kind</th><th>Label / effect</th><th>Boolean expression</th></tr></thead><tbody>
+    <tr><td>Transition</td><td>address accepted</td><td><code>i_axi_arvalid &amp;&amp; o_axi_arready</code></td></tr>
+    <tr><td>Transition</td><td>legal burst</td><td><code>w_araddr_bit11 &amp;&amp; w_burst_ok &amp;&amp; w_size_ok</code></td></tr>
+    <tr><td>Transition</td><td>illegal burst</td><td><code>!(w_araddr_bit11 &amp;&amp; w_burst_ok &amp;&amp; w_size_ok)</code></td></tr>
+    <tr><td>Transition</td><td>last beat accepted</td><td><code>o_axi_rvalid &amp;&amp; i_axi_rready &amp;&amp; o_axi_rlast</code></td></tr>
+    <tr><td>Transition</td><td>burst closed</td><td><code>1&#x27;b1</code></td></tr>
+  </tbody></table></section>
+</body>
+</html>

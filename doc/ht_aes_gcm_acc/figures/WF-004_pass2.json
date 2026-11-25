@@ -1,0 +1,54 @@
+{
+ "head": {
+  "text": "WF-004 Policy A pass 2 after ver_ok: plaintext is released (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p............................."
+  },
+  {
+   "name": "ver_ok",
+   "wave": "1............................."
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "==.=.............==..==.......",
+   "data": [
+    "KEY",
+    "PY_CFG",
+    "PAY",
+    "LEN",
+    "TAG",
+    "FIN",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "core_out_valid",
+   "wave": "0............1.0.............."
+  },
+  {
+   "name": "out_fifo_push",
+   "wave": "0............1.0.............."
+  },
+  {
+   "name": "ghash_valid",
+   "wave": "0............1.0.10..........."
+  },
+  {
+   "name": "tag_match",
+   "wave": "0...................1.0......."
+  },
+  {
+   "name": "o_done",
+   "wave": "0....................10......."
+  }
+ ],
+ "foot": {
+  "text": "Pass 2 restarts from the verified context, decrypts in CTR, recomputes GHASH from the saved post-AAD state and compares the tag again at the end. Illustrative."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

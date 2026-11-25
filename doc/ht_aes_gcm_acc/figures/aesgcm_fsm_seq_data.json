@@ -1,0 +1,175 @@
+{
+  "page_name": "FSM_SEQ_DATA",
+  "out_name": "aesgcm_fsm_seq_data.drawio",
+  "function": "message sequencer, data view",
+  "initial": "ENUM_ST_SEQ_AAD",
+  "states": [
+    {
+      "name": "ENUM_ST_SEQ_AAD",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_PY_CFG",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_PAY",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_LEN",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_TAG",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_SUSP",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_FIN",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_SEQ_AAD",
+      "dst": "ENUM_ST_SEQ_AAD",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_PY_CFG",
+      "dst": "ENUM_ST_SEQ_PY_CFG",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_PAY",
+      "dst": "ENUM_ST_SEQ_PAY",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_LEN",
+      "dst": "ENUM_ST_SEQ_LEN",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_TAG",
+      "dst": "ENUM_ST_SEQ_TAG",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_SUSP",
+      "dst": "ENUM_ST_SEQ_SUSP",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_AAD",
+      "dst": "ENUM_ST_SEQ_PY_CFG",
+      "label": "AAD done"
+    },
+    {
+      "src": "ENUM_ST_SEQ_AAD",
+      "dst": "ENUM_ST_SEQ_PAY",
+      "label": "AAD done pass 1"
+    },
+    {
+      "src": "ENUM_ST_SEQ_PY_CFG",
+      "dst": "ENUM_ST_SEQ_PAY",
+      "label": "core configured"
+    },
+    {
+      "src": "ENUM_ST_SEQ_PAY",
+      "dst": "ENUM_ST_SEQ_LEN",
+      "label": "payload done"
+    },
+    {
+      "src": "ENUM_ST_SEQ_PAY",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": "legacy done"
+    },
+    {
+      "src": "ENUM_ST_SEQ_LEN",
+      "dst": "ENUM_ST_SEQ_TAG",
+      "label": "length absorbed"
+    },
+    {
+      "src": "ENUM_ST_SEQ_TAG",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": "tag compared"
+    },
+    {
+      "src": "ENUM_ST_SEQ_SUSP",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": "context saved"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "AAD done",
+      "expression": "w_aad_bytes_done && w_pass != 2'd1"
+    },
+    {
+      "label": "AAD done pass 1",
+      "expression": "w_aad_bytes_done && w_pass == 2'd1"
+    },
+    {
+      "label": "context saved",
+      "expression": "w_ctx_done"
+    },
+    {
+      "label": "core configured",
+      "expression": "i_core_cfg_valid && o_core_cfg_ready"
+    },
+    {
+      "label": "legacy done",
+      "expression": "w_pay_bytes_done && w_core_drained && !w_mode_gcm"
+    },
+    {
+      "label": "length absorbed",
+      "expression": "w_ghash_valid"
+    },
+    {
+      "label": "payload done",
+      "expression": "w_pay_bytes_done && w_core_drained && w_mode_gcm"
+    },
+    {
+      "label": "tag compared",
+      "expression": "w_tag_done"
+    }
+  ],
+  "global_overrides": [
+    {
+      "id": "G2",
+      "source": "AAD or PAY",
+      "destination": "ENUM_ST_SEQ_SUSP",
+      "expression": "w_cmd_suspend && w_block_boundary && w_core_drained && w_ctx_slots_en",
+      "note": "Lower priority than G1 and higher than the normal transitions of AAD and PAY."
+    }
+  ],
+  "layout": {
+    "margin": 160
+  },
+  "continuation": {
+    "entries": [
+      {
+        "from_view": "FSM_SEQ_SETUP",
+        "entry": "ENUM_ST_SEQ_AAD",
+        "side": "top"
+      },
+      {
+        "from_view": "FSM_SEQ_SETUP",
+        "entry": "ENUM_ST_SEQ_PY_CFG",
+        "side": "top"
+      }
+    ]
+  }
+}
