@@ -2,15 +2,15 @@ FSM: AXI4 read window
 STATES: 5, TRANSITIONS: 9
 GLOBAL CONTROLS: 0 (notation panel; exact guards in CONDITION_MAPPING)
 RESET ENTRY: 1, CONTINUATION ENTRIES: 0
-LAYOUT: retry-lr-snake-3-g260-r320
+LAYOUT: manual
 CROSSINGS: 0
 CONNECTOR CONFLICTS: 0 (minimum clearance 50 px)
 LABEL CONFLICTS: 0
-MAX LABEL DISTANCE: 0.0 px (maximum 120 px)
+MAX LABEL DISTANCE: 20.0 px (maximum 120 px)
 NODE HITS: 0
-BENDS: 16
-MINIMUM GAP: 260.0 px (minimum 260 px)
+BENDS: 15
+MINIMUM GAP: 240.0 px (minimum 180 px)
 TEXT FIT: PASS (worst fill ratio 0.86)
-DISTRIBUTION: PASS (3 x-centers, 4 y-centers)
-PAGE: 1971 x 931 px
+DISTRIBUTION: PASS (4 x-centers, 2 y-centers)
+PAGE: 2076 x 545 px
 RESULT: PASS

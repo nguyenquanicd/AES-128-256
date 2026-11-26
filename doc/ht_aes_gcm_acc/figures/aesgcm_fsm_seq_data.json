@@ -30,11 +30,6 @@
       "hold_conditions": []
     },
     {
-      "name": "ENUM_ST_SEQ_SUSP",
-      "conditional_exit": true,
-      "hold_conditions": []
-    },
-    {
       "name": "ENUM_ST_SEQ_FIN",
       "conditional_exit": false,
       "hold_conditions": []
@@ -64,11 +59,6 @@
     {
       "src": "ENUM_ST_SEQ_TAG",
       "dst": "ENUM_ST_SEQ_TAG",
-      "label": ""
-    },
-    {
-      "src": "ENUM_ST_SEQ_SUSP",
-      "dst": "ENUM_ST_SEQ_SUSP",
       "label": ""
     },
     {
@@ -105,11 +95,6 @@
       "src": "ENUM_ST_SEQ_TAG",
       "dst": "ENUM_ST_SEQ_FIN",
       "label": "tag compared"
-    },
-    {
-      "src": "ENUM_ST_SEQ_SUSP",
-      "dst": "ENUM_ST_SEQ_FIN",
-      "label": "context saved"
     }
   ],
   "condition_aliases": [
@@ -120,10 +105,6 @@
     {
       "label": "AAD done pass 1",
       "expression": "w_aad_bytes_done && w_pass == 2'd1"
-    },
-    {
-      "label": "context saved",
-      "expression": "w_ctx_done"
     },
     {
       "label": "core configured",
@@ -146,29 +127,47 @@
       "expression": "w_tag_done"
     }
   ],
-  "global_overrides": [
-    {
-      "id": "G2",
-      "source": "AAD or PAY",
-      "destination": "ENUM_ST_SEQ_SUSP",
-      "expression": "w_cmd_suspend && w_block_boundary && w_core_drained && w_ctx_slots_en",
-      "note": "Lower priority than G1 and higher than the normal transitions of AAD and PAY."
-    }
-  ],
+  "global_overrides": [],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_SEQ_PAY": [
+        780,
+        500
+      ],
+      "ENUM_ST_SEQ_PY_CFG": [
+        260,
+        500
+      ],
+      "ENUM_ST_SEQ_AAD": [
+        260,
+        800
+      ],
+      "ENUM_ST_SEQ_LEN": [
+        1300,
+        500
+      ],
+      "ENUM_ST_SEQ_FIN": [
+        780,
+        800
+      ],
+      "ENUM_ST_SEQ_TAG": [
+        1300,
+        800
+      ]
+    }
   },
   "continuation": {
     "entries": [
       {
         "from_view": "FSM_SEQ_SETUP",
         "entry": "ENUM_ST_SEQ_AAD",
-        "side": "top"
+        "side": "left"
       },
       {
         "from_view": "FSM_SEQ_SETUP",
         "entry": "ENUM_ST_SEQ_PY_CFG",
-        "side": "top"
+        "side": "left"
       }
     ]
   }

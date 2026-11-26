@@ -216,9 +216,8 @@ The accelerator is a control and data wrapper around the unchanged AES core. Sof
 | `m_aesgcm_axi_win` (inside `m_aesgcm_bus_dom`, elaborated when `PARA_AXI_EN` = 1) | AXI4 subordinate that maps the write window to input-FIFO pushes and the read window to output-FIFO pops | AXI4 channels, FIFO bus side | BUS | AXI channel registers, burst counter |
 | `m_aesgcm_pio` | Converts register-event sideband of `aesgcm_pio_din` / `aesgcm_pio_dout` into FIFO push/pop of 32-bit words | `o_reg_wr_en/addr`, `o_reg_rd_en/addr`, FIFO | BUS | None beyond FIFO |
 | `m_aesgcm_dma_ch` (two instances) | Four-phase request/acknowledge channel: instance 0 input, instance 1 output | FIFO room/fill, burst size, ack | BUS | Phase state |
-| `m_aesgcm_fifo` (two instances) | Dual-clock width-converting FIFO between the bus beat width (32/64/128 bit) and 128-bit blocks; instance 0 input, instance 1 output; crossing structure by `PARA_CLK_ASYNC` | Bus-side push/pop, core-side N-block read/write | BUS and CORE | `PARA_FIFO_DEPTH` blocks of 128 bit |
-| `m_aesgcm_xing_cfg` | Four-phase transfer of the configuration bundle (including key words) from BUS to CORE and of command events | Configuration snapshot | BUS to CORE | Bundle holding register (zeroized) |
-| `m_aesgcm_xing_sts` | Four-phase transfer of the status bundle (tag, flags, counters, error codes) from CORE to BUS | Status bundle | CORE to BUS | Bundle holding register |
+| `m_aesgcm_fifo_in`, `m_aesgcm_fifo_out` (with `m_aesgcm_pack`, `m_aesgcm_unpack`) | Dual-clock FIFOs of `PARA_FIFO_DEPTH` entries between the bus beats (32/64/128 bit) and entries of up to N blocks: `m_aesgcm_pack` forms blocks and entries on the bus side of the input FIFO, `m_aesgcm_unpack` forms beats on the bus side of the output FIFO and evaluates the DMA output condition; library FIFO by `PARA_CLK_ASYNC` (DEC-016, DEC-018) | Bus-side push/pop, core-side entry read/write | BUS and CORE | `PARA_FIFO_DEPTH` entries of N x 128 bit plus mask and flags |
+| `m_aesgcm_xing_bdl` (five instances, with `m_aesgcm_hs_xing`) | Four-phase bundle crossing: source holding register and FSM hsk, destination capture register and FSM hsr; request and acknowledge cross in `m_aesgcm_hs_xing` (library `m_vlsit_ahs4_top` when asynchronous, registered handshake when synchronous). Instances `u_xing_cfg` (CDC-001), `u_xing_sts` (CDC-002), `u_xing_cmd` (CDC-005), `u_xing_wreq` and `u_xing_wrsp` (CDC-007) | Bundles | BUS to CORE or CORE to BUS | Holding register (cleared after the acknowledge) and capture register (cleared by the consumer after use) |
 | `m_aesgcm_seq` | Message sequencer: setup, AAD, payload, length block, tag, policy passes, abort/zeroize, suspend/resume; drives the AES core and the GHASH unit | Bundle, FIFO core side, AES core, GHASH, tag compare | CORE | Phase state, byte counters, J0/E(K,J0), pass flags |
 | `m_aesgcm_fmt_in` / `m_aesgcm_fmt_out` | Form 16-byte blocks from the byte stream, mask the last partial block, pack output bytes | FIFO blocks, byte counters | CORE | Residual byte registers |
 | `m_aesgcm_ghash` (with `m_aesgcm_ghash_mul`, `m_aesgcm_hpow`) | GHASH accumulate with configurable architecture; hash-subkey powers | Blocks, H, count | CORE | Accumulator Y, H and powers of H |
@@ -510,7 +509,7 @@ The accelerator is a control and data wrapper around the unchanged AES core. Sof
 
 ### 5.3 Transaction and dataflow
 
-**Message start.** Software writes key, IV, lengths and `aesgcm_cfg`, then writes `aesgcm_ctrl.start` = 1. `m_aesgcm_bus_ctl` checks the configuration (section 12), snapshots it, and `m_aesgcm_xing_cfg` delivers the bundle to the CORE domain. `aesgcm_ctrl.start` is cleared by hardware when the bundle is accepted by the sequencer.
+**Message start.** Software writes key, IV, lengths and `aesgcm_cfg`, then writes `aesgcm_ctrl.start` = 1. `m_aesgcm_bus_ctl` checks the configuration (section 12), snapshots it, and `u_xing_cfg` (`m_aesgcm_xing_bdl`) delivers the bundle to the CORE domain. `aesgcm_ctrl.start` is cleared by hardware when the bundle is accepted by the sequencer.
 
 **GCM encryption and policy C decryption (single pass).**
 
@@ -694,7 +693,7 @@ The input is resynchronized by two flops in each domain. While it is 1: policy C
 | CDC-002 | CORE → BUS | Status bundle: tag (128), flags (done, tag_ok, ver_ok, error codes), consumed byte counts, failed-tag counter, context valid mask | Holding register in the CORE domain, four-phase handshake as CDC-001 | As CDC-001 | As CDC-001 |
 | CDC-003 | BUS → CORE | Input data blocks | Dual-clock FIFO (async: Gray-code pointers and two-flop synchronizers; sync: synchronous two-clock FIFO with registered pointer transfer) | Both pointers reset by the matching domain; FIFO flushed on abort/zeroize/suspend by command handshake | CDC tool / STA |
 | CDC-004 | CORE → BUS | Output data blocks | Dual-clock FIFO as CDC-003 | As CDC-003 | CDC tool / STA |
-| CDC-005 | BUS → CORE | Commands `abort`, `zeroize`, `suspend`, `resume` | Four-phase event handshake, each command independent; `abort` and `zeroize` have priority over the bundle handshake | Commands cleared by reset | CDC tool / STA |
+| CDC-005 | BUS → CORE | Command bundle {`abort`, `zeroize`, `suspend`, `free`, `ctx_id`} | One four-phase bundle crossing `u_xing_cmd`, independent of the configuration bundle, carrying every pending command in one transfer (DEC-022); `resume` travels as a configuration bundle with the resume operation code | Commands cleared by reset | CDC tool / STA |
 | CDC-006 | Static → BUS and CORE | `i_gcm_secure_only` | Two-flop synchronizer in each domain | Reset value 1 (safe: secure-only active) | Static; input constant while a message is active |
 | CDC-007 | BUS ↔ CORE | Context export words (32-bit) | Four-phase word handshake sharing the structure of CDC-001/002 | As CDC-001 | As CDC-001 |
 
@@ -750,7 +749,7 @@ The parameter list below is the table of this section.
 
 ### 8.3 Illegal configurations
 
-An illegal parameter value or combination stops elaboration with a message (REQ-PARAM-001): `PARA_AES_LANE_NUM` outside 1 to 4; `PARA_GCM_REL_POLICY` greater than 2; `PARA_GHASH_ARCH` greater than 2; `PARA_GHASH_DIGIT_W` not in {4, 8, 16, 32, 64} when `PARA_GHASH_ARCH` = 0; `PARA_GHASH_PIPE` = 1 with `PARA_GHASH_ARCH` = 0; `PARA_GCM_CTX_NUM` greater than 4; `PARA_FIFO_DEPTH` not a power of two between 8 and 256; `PARA_AXI_DATA_W` not in {32, 64, 128}; `PARA_AXI_ID_W` outside 1 to 8; `PARA_AXI_ADDR_W` outside 12 to 32; `PARA_GCM_CTX_MODE` = 1 with `PARA_AES_GCM_EN` = 0.
+An illegal parameter value or combination stops elaboration with a message (REQ-PARAM-001). Rule P14 keeps elaboration system tasks out of the design RTL, so the check is the verification-only module `m_aesgcm_param_check` (`verification/ht_aes_gcm_acc/`), compiled by the lint and simulation flows with the parameters of the wrapper under test (DEC-019); synthesis alone does not check the values. Illegal values: `PARA_AES_LANE_NUM` outside 1 to 4; `PARA_GCM_REL_POLICY` greater than 2; `PARA_GHASH_ARCH` greater than 2; `PARA_GHASH_DIGIT_W` not in {4, 8, 16, 32, 64} when `PARA_GHASH_ARCH` = 0; `PARA_GHASH_PIPE` = 1 with `PARA_GHASH_ARCH` = 0; `PARA_GCM_CTX_NUM` greater than 4; `PARA_FIFO_DEPTH` not a power of two between 8 and 256; `PARA_AXI_DATA_W` not in {32, 64, 128}; `PARA_AXI_ID_W` outside 1 to 8; `PARA_AXI_ADDR_W` outside 12 to 32; `PARA_GCM_CTX_MODE` = 1 with `PARA_AES_GCM_EN` = 0.
 
 ## 9. Data representation and arithmetic
 
@@ -771,7 +770,7 @@ All byte streams are numbered from byte 0, the first byte of the stream. A 16-by
 
 ### 9.2 Stream format
 
-The input stream is: the AAD segment (`aesgcm_aadlen` bytes), padded with ignored bytes up to a whole beat, followed by the payload segment (`aesgcm_datalen` bytes), also padded to a whole beat. A beat is the AXI width DW (or 32 bits for PIO). Policy A pass 2 and legacy modes carry only the payload segment (AAD length 0). The output stream is the payload segment of `aesgcm_datalen` bytes padded with zero bytes up to a whole beat. The tag is never part of the stream. Padding bytes of input are discarded; padding bytes of output read as 0.
+The input stream is: the AAD segment (`aesgcm_aadlen` bytes), padded with ignored bytes up to a whole beat, followed by the payload segment (`aesgcm_datalen` bytes), also padded to a whole beat. A beat is the AXI width DW (or 32 bits for PIO). Policy A pass 2 and legacy modes carry only the payload segment (AAD length 0). The output stream is the payload segment of `aesgcm_datalen` bytes padded with zero bytes up to a whole beat. The tag is never part of the stream. CFB mode with `aesgcm_cfg.cfb_seg` = s of 8 bits or more carries s/8 stream bytes per block; for segments of 1, 2 or 4 bits each segment takes one stream byte, left-justified in bits [7:8-s] of that byte; the other bits of an input byte are ignored and those of an output byte are 0 (DEC-021). Example: CFB-1 with `aesgcm_datalen` = 10 processes 10 segments. Padding bytes of input are discarded; padding bytes of output read as 0.
 
 ### 9.3 Arithmetic and encodings
 
@@ -795,7 +794,470 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
 
 ### 10.1 Modes and state transitions
 
-**Figures pending (rule R-070):** the geometry check of the FSM diagram(s) seq_data, seq_setup has not reached zero conflicts; the state and transition tables below are complete and the JSON sources are in `figures/`. See TBD-009.
+<!-- FSM-DIAGRAM:message sequencer, setup view -->
+![FSM state diagram of message sequencer, setup view](figures/aesgcm_fsm_seq_setup.svg)
+
+```json
+{
+  "page_name": "FSM_SEQ_SETUP",
+  "out_name": "aesgcm_fsm_seq_setup.drawio",
+  "function": "message sequencer, setup view",
+  "initial": "ENUM_ST_SEQ_IDLE",
+  "states": [
+    {
+      "name": "ENUM_ST_SEQ_IDLE",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_KEY",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_SU_CFG",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_SU_RUN",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_POW",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_REST",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_AAD",
+      "conditional_exit": false,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_PY_CFG",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_SEQ_IDLE",
+      "dst": "ENUM_ST_SEQ_IDLE",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_KEY",
+      "dst": "ENUM_ST_SEQ_KEY",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_CFG",
+      "dst": "ENUM_ST_SEQ_SU_CFG",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_RUN",
+      "dst": "ENUM_ST_SEQ_SU_RUN",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_POW",
+      "dst": "ENUM_ST_SEQ_POW",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_REST",
+      "dst": "ENUM_ST_SEQ_REST",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_IDLE",
+      "dst": "ENUM_ST_SEQ_KEY",
+      "label": "new message"
+    },
+    {
+      "src": "ENUM_ST_SEQ_IDLE",
+      "dst": "ENUM_ST_SEQ_REST",
+      "label": "resume"
+    },
+    {
+      "src": "ENUM_ST_SEQ_KEY",
+      "dst": "ENUM_ST_SEQ_SU_CFG",
+      "label": "key ready GCM"
+    },
+    {
+      "src": "ENUM_ST_SEQ_KEY",
+      "dst": "ENUM_ST_SEQ_PY_CFG",
+      "label": "key ready no setup"
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_CFG",
+      "dst": "ENUM_ST_SEQ_SU_RUN",
+      "label": "core configured"
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_RUN",
+      "dst": "ENUM_ST_SEQ_POW",
+      "label": "setup results"
+    },
+    {
+      "src": "ENUM_ST_SEQ_POW",
+      "dst": "ENUM_ST_SEQ_AAD",
+      "label": "powers ready"
+    },
+    {
+      "src": "ENUM_ST_SEQ_REST",
+      "dst": "ENUM_ST_SEQ_POW",
+      "label": "context restored"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "context restored",
+      "expression": "w_ctx_done"
+    },
+    {
+      "label": "core configured",
+      "expression": "i_core_cfg_valid && o_core_cfg_ready"
+    },
+    {
+      "label": "key ready GCM",
+      "expression": "w_key_ready && w_mode_gcm && (w_pass == 2'd0 || w_pass == 2'd1)"
+    },
+    {
+      "label": "key ready no setup",
+      "expression": "w_key_ready && (!w_mode_gcm || w_pass == 2'd2)"
+    },
+    {
+      "label": "new message",
+      "expression": "w_bundle_valid && !w_cmd_resume && w_cfg_legal"
+    },
+    {
+      "label": "powers ready",
+      "expression": "w_pow_done"
+    },
+    {
+      "label": "resume",
+      "expression": "w_cmd_resume && w_slot_valid"
+    },
+    {
+      "label": "setup results",
+      "expression": "w_h_captured && w_ej0_captured"
+    }
+  ],
+  "global_overrides": [],
+  "layout": {
+    "margin": 160
+  },
+  "reset": {
+    "signal": "i_rst_n_core",
+    "active_level": "low"
+  }
+}
+```
+
+*Figure 10-1. FSM state diagram of message sequencer, setup view. Source: `figures/aesgcm_fsm_seq_setup.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+<!-- /FSM-DIAGRAM:message sequencer, setup view -->
+
+<!-- FSM-DIAGRAM:message sequencer, data view -->
+![FSM state diagram of message sequencer, data view](figures/aesgcm_fsm_seq_data.svg)
+
+```json
+{
+  "page_name": "FSM_SEQ_DATA",
+  "out_name": "aesgcm_fsm_seq_data.drawio",
+  "function": "message sequencer, data view",
+  "initial": "ENUM_ST_SEQ_AAD",
+  "states": [
+    {
+      "name": "ENUM_ST_SEQ_AAD",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_PY_CFG",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_PAY",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_LEN",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_TAG",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_FIN",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_SEQ_AAD",
+      "dst": "ENUM_ST_SEQ_AAD",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_PY_CFG",
+      "dst": "ENUM_ST_SEQ_PY_CFG",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_PAY",
+      "dst": "ENUM_ST_SEQ_PAY",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_LEN",
+      "dst": "ENUM_ST_SEQ_LEN",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_TAG",
+      "dst": "ENUM_ST_SEQ_TAG",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_AAD",
+      "dst": "ENUM_ST_SEQ_PY_CFG",
+      "label": "AAD done"
+    },
+    {
+      "src": "ENUM_ST_SEQ_AAD",
+      "dst": "ENUM_ST_SEQ_PAY",
+      "label": "AAD done pass 1"
+    },
+    {
+      "src": "ENUM_ST_SEQ_PY_CFG",
+      "dst": "ENUM_ST_SEQ_PAY",
+      "label": "core configured"
+    },
+    {
+      "src": "ENUM_ST_SEQ_PAY",
+      "dst": "ENUM_ST_SEQ_LEN",
+      "label": "payload done"
+    },
+    {
+      "src": "ENUM_ST_SEQ_PAY",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": "legacy done"
+    },
+    {
+      "src": "ENUM_ST_SEQ_LEN",
+      "dst": "ENUM_ST_SEQ_TAG",
+      "label": "length absorbed"
+    },
+    {
+      "src": "ENUM_ST_SEQ_TAG",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": "tag compared"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "AAD done",
+      "expression": "w_aad_bytes_done && w_pass != 2'd1"
+    },
+    {
+      "label": "AAD done pass 1",
+      "expression": "w_aad_bytes_done && w_pass == 2'd1"
+    },
+    {
+      "label": "core configured",
+      "expression": "i_core_cfg_valid && o_core_cfg_ready"
+    },
+    {
+      "label": "legacy done",
+      "expression": "w_pay_bytes_done && w_core_drained && !w_mode_gcm"
+    },
+    {
+      "label": "length absorbed",
+      "expression": "w_ghash_valid"
+    },
+    {
+      "label": "payload done",
+      "expression": "w_pay_bytes_done && w_core_drained && w_mode_gcm"
+    },
+    {
+      "label": "tag compared",
+      "expression": "w_tag_done"
+    }
+  ],
+  "global_overrides": [],
+  "layout": {
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_SEQ_PAY": [
+        780,
+        500
+      ],
+      "ENUM_ST_SEQ_PY_CFG": [
+        260,
+        500
+      ],
+      "ENUM_ST_SEQ_AAD": [
+        260,
+        800
+      ],
+      "ENUM_ST_SEQ_LEN": [
+        1300,
+        500
+      ],
+      "ENUM_ST_SEQ_FIN": [
+        780,
+        800
+      ],
+      "ENUM_ST_SEQ_TAG": [
+        1300,
+        800
+      ]
+    }
+  },
+  "continuation": {
+    "entries": [
+      {
+        "from_view": "FSM_SEQ_SETUP",
+        "entry": "ENUM_ST_SEQ_AAD",
+        "side": "left"
+      },
+      {
+        "from_view": "FSM_SEQ_SETUP",
+        "entry": "ENUM_ST_SEQ_PY_CFG",
+        "side": "left"
+      }
+    ]
+  }
+}
+```
+
+*Figure 10-2. FSM state diagram of message sequencer, data view. Source: `figures/aesgcm_fsm_seq_data.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+<!-- /FSM-DIAGRAM:message sequencer, data view -->
+
+<!-- FSM-DIAGRAM:message sequencer, completion and exception view -->
+![FSM state diagram of message sequencer, completion and exception view](figures/aesgcm_fsm_seq_exc.svg)
+
+```json
+{
+  "page_name": "FSM_SEQ_EXC",
+  "out_name": "aesgcm_fsm_seq_exc.drawio",
+  "function": "message sequencer, completion and exception view",
+  "initial": "ENUM_ST_SEQ_FIN",
+  "states": [
+    {
+      "name": "ENUM_ST_SEQ_FIN",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_SUSP",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_ABRT",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_IDLE",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_SEQ_FIN",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_SUSP",
+      "dst": "ENUM_ST_SEQ_SUSP",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_ABRT",
+      "dst": "ENUM_ST_SEQ_ABRT",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_SUSP",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": "context saved"
+    },
+    {
+      "src": "ENUM_ST_SEQ_ABRT",
+      "dst": "ENUM_ST_SEQ_FIN",
+      "label": "cleanup done"
+    },
+    {
+      "src": "ENUM_ST_SEQ_FIN",
+      "dst": "ENUM_ST_SEQ_IDLE",
+      "label": "status accepted"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "cleanup done",
+      "expression": "w_zero_done"
+    },
+    {
+      "label": "context saved",
+      "expression": "w_ctx_done"
+    },
+    {
+      "label": "status accepted",
+      "expression": "w_status_ack"
+    }
+  ],
+  "global_overrides": [
+    {
+      "id": "G1",
+      "source": "ANY STATE except IDLE, FIN",
+      "destination": "ENUM_ST_SEQ_ABRT",
+      "expression": "w_cmd_abort || w_cmd_zeroize || w_fatal_err || w_keywait_expired",
+      "note": "Highest priority after reset. Fatal errors are LEN_ERR, CTR_EXHAUST, PROTO_ERR and KEY_ERR (side-load wait expired)."
+    },
+    {
+      "id": "G2",
+      "source": "AAD or PAY",
+      "destination": "ENUM_ST_SEQ_SUSP",
+      "expression": "w_cmd_suspend && w_block_boundary && w_core_drained && w_ctx_slots_en",
+      "note": "Lower priority than G1 and higher than the normal transitions of AAD and PAY."
+    }
+  ],
+  "layout": {
+    "margin": 160
+  },
+  "continuation": {
+    "entries": [
+      {
+        "from_view": "FSM_SEQ_DATA",
+        "entry": "ENUM_ST_SEQ_FIN",
+        "side": "bottom"
+      }
+    ]
+  }
+}
+```
+
+*Figure 10-3. FSM state diagram of message sequencer, completion and exception view. Source: `figures/aesgcm_fsm_seq_exc.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+<!-- /FSM-DIAGRAM:message sequencer, completion and exception view -->
 
 <!-- FSM-DIAGRAM:context engine -->
 ![FSM state diagram of context engine](figures/aesgcm_fsm_ctx.svg)
@@ -911,7 +1373,29 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
     }
   ],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_CTX_IDLE": [
+        1700,
+        480
+      ],
+      "ENUM_ST_CTX_DEC": [
+        740,
+        480
+      ],
+      "ENUM_ST_CTX_MOVE": [
+        1220,
+        480
+      ],
+      "ENUM_ST_CTX_XFER": [
+        260,
+        480
+      ],
+      "ENUM_ST_CTX_DONE": [
+        740,
+        200
+      ]
+    }
   },
   "global_overrides": [
     {
@@ -925,7 +1409,7 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
 }
 ```
 
-*Figure 10-1. FSM state diagram of context engine. Source: `figures/aesgcm_fsm_ctx.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+*Figure 10-4. FSM state diagram of context engine. Source: `figures/aesgcm_fsm_ctx.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
 <!-- /FSM-DIAGRAM:context engine -->
 
 <!-- FSM-DIAGRAM:digit-serial multiplier control -->
@@ -1000,7 +1484,21 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
     }
   ],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_GHS_IDLE": [
+        260,
+        460
+      ],
+      "ENUM_ST_GHS_RUN": [
+        740,
+        200
+      ],
+      "ENUM_ST_GHS_DONE": [
+        740,
+        460
+      ]
+    }
   },
   "global_overrides": [
     {
@@ -1014,7 +1512,7 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
 }
 ```
 
-*Figure 10-2. FSM state diagram of digit-serial multiplier control. Source: `figures/aesgcm_fsm_ghs.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+*Figure 10-5. FSM state diagram of digit-serial multiplier control. Source: `figures/aesgcm_fsm_ghs.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
 <!-- /FSM-DIAGRAM:digit-serial multiplier control -->
 
 <!-- FSM-DIAGRAM:four-phase requester -->
@@ -1094,12 +1592,26 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
     }
   ],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_HSK_IDLE": [
+        740,
+        460
+      ],
+      "ENUM_ST_HSK_REQ": [
+        260,
+        200
+      ],
+      "ENUM_ST_HSK_REL": [
+        1220,
+        200
+      ]
+    }
   }
 }
 ```
 
-*Figure 10-3. FSM state diagram of four-phase requester. Source: `figures/aesgcm_fsm_hsk.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+*Figure 10-6. FSM state diagram of four-phase requester. Source: `figures/aesgcm_fsm_hsk.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
 <!-- /FSM-DIAGRAM:four-phase requester -->
 
 <!-- FSM-DIAGRAM:four-phase responder -->
@@ -1174,12 +1686,26 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
     }
   ],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_HSR_IDLE": [
+        260,
+        460
+      ],
+      "ENUM_ST_HSR_CAP": [
+        740,
+        460
+      ],
+      "ENUM_ST_HSR_ACK": [
+        740,
+        200
+      ]
+    }
   }
 }
 ```
 
-*Figure 10-4. FSM state diagram of four-phase responder. Source: `figures/aesgcm_fsm_hsr.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+*Figure 10-7. FSM state diagram of four-phase responder. Source: `figures/aesgcm_fsm_hsr.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
 <!-- /FSM-DIAGRAM:four-phase responder -->
 
 <!-- FSM-DIAGRAM:AXI4 write window -->
@@ -1259,12 +1785,26 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
     }
   ],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_AXW_IDLE": [
+        740,
+        460
+      ],
+      "ENUM_ST_AXW_DATA": [
+        260,
+        200
+      ],
+      "ENUM_ST_AXW_RESP": [
+        1220,
+        200
+      ]
+    }
   }
 }
 ```
 
-*Figure 10-5. FSM state diagram of AXI4 write window. Source: `figures/aesgcm_fsm_axw.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+*Figure 10-8. FSM state diagram of AXI4 write window. Source: `figures/aesgcm_fsm_axw.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
 <!-- /FSM-DIAGRAM:AXI4 write window -->
 
 <!-- FSM-DIAGRAM:AXI4 read window -->
@@ -1377,23 +1917,45 @@ GHASH multiplication is the field multiplication of REF-001 Algorithm 1 on 128-b
     }
   ],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_AXR_IDLE": [
+        1700,
+        480
+      ],
+      "ENUM_ST_AXR_CHK": [
+        740,
+        480
+      ],
+      "ENUM_ST_AXR_DATA": [
+        1220,
+        480
+      ],
+      "ENUM_ST_AXR_DROP": [
+        260,
+        480
+      ],
+      "ENUM_ST_AXR_END": [
+        740,
+        200
+      ]
+    }
   }
 }
 ```
 
-*Figure 10-6. FSM state diagram of AXI4 read window. Source: `figures/aesgcm_fsm_axr.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
+*Figure 10-9. FSM state diagram of AXI4 read window. Source: `figures/aesgcm_fsm_axr.drawio` (draw.io, VLSIT library, generated by `vlsit_fsm_diagram.py`).*
 <!-- /FSM-DIAGRAM:AXI4 read window -->
 
 The design has seven finite-state machines (FSMs); shared overrides that apply from several states are listed as global overrides (G1, G2). State names use the full approved identifier made of `ENUM_ST_`, the FSM function and the state; the reset state is the first state listed. A state without a listed exit condition holds. Priority in every FSM: reset, then `abort`/`zeroize`, then error, then suspend, then the normal flow. The figures and their JSON are inserted by `vlsit_fsm_diagram.py insert` at each FSM heading.
 
 #### FSM seq (message sequencer)
 
-Purpose, owning block, clock and reset: controls one message from configuration to completion; owner `m_aesgcm_seq`; clock CLK-CORE; reset RST-CORE, reset state `ENUM_ST_SEQ_IDLE`. The figure is split into two linked views approved by the user on 2026-11-25 (rule R-071): the setup view (IDLE, KEY, SU_CFG, SU_RUN, POW, REST, ABRT, FIN, with AAD and PY_CFG as boundary states) and the data view (AAD, PY_CFG, PAY, LEN, TAG, SUSP, with FIN as boundary state); every state shows its complete outgoing behavior in one of the two views.
+Purpose, owning block, clock and reset: controls one message from configuration to completion; owner `m_aesgcm_seq`; clock CLK-CORE; reset RST-CORE, reset state `ENUM_ST_SEQ_IDLE`. The figure is split into three linked views (rule R-071; two views approved on 2026-11-25, changed to three by the designer on 2026-11-25 because the two-view figures could not reach zero geometry conflicts, DEC-015): the setup view (IDLE, KEY, SU_CFG, SU_RUN, POW, REST, with AAD and PY_CFG as boundary states), the data view (AAD, PY_CFG, PAY, LEN, TAG, with FIN as boundary state) and the completion and exception view (FIN, SUSP, ABRT and the global overrides G1 and G2, with IDLE as boundary state); every state shows its complete outgoing behavior in one of the three views.
 
 | Mode/state | Entry condition | State function | Hold behavior | Outputs / side effects |
 |---|---|---|---|---|
-| ENUM_ST_SEQ_IDLE | Reset; message finished; context saved; abort done | No message; ready for a bundle or a command | Hold until a bundle or `resume` arrives | AES core idle; GHASH cleared; `o_key_side_ack` 0 |
+| ENUM_ST_SEQ_IDLE | Reset; message finished; context saved; abort done | No message; ready for a bundle or a command; a `zeroize` received here is carried out in place (AES core, key store, hash subkey, powers and slots cleared, `zeroized` reported) and an `abort` or `suspend` is acknowledged (DEC-022) | Hold until a bundle or `resume` arrives | AES core idle; GHASH cleared; `o_key_side_ack` 0 |
 | ENUM_ST_SEQ_KEY | Bundle accepted | Select the key (bundle or side-load), capture side-load, latch tag length at `key_new` | Hold while side-load valid is 0; expiry of `aesgcm_keywait` triggers G1 with `KEY_ERR` | Key store loaded; `o_key_side_ack` pulses once on capture |
 | ENUM_ST_SEQ_SU_CFG | Mode GCM, pass 0 or 1, key ready | Configure the AES core for ECB encrypt (cfg handshake of REF-008) | Hold until the core cfg is accepted | Core configured with key, size |
 | ENUM_ST_SEQ_SU_RUN | Core accepted ECB configuration | Send blocks `0^128` and J0; capture the two results as H and E(K,J0) | Hold until both results are received | H, E(K,J0) registers loaded |
@@ -1427,7 +1989,7 @@ Purpose, owning block, clock and reset: controls one message from configuration 
 | ENUM_ST_SEQ_SUSP | ENUM_ST_SEQ_FIN | Context saved | Context engine done; FIN reports `CTX_SWITCH_DONE` |
 | ENUM_ST_SEQ_REST | ENUM_ST_SEQ_POW | Context restored | Context engine done |
 | ENUM_ST_SEQ_ABRT | ENUM_ST_SEQ_FIN | Cleanup done | Zeroize of the AES core and clearing of GCM state complete; FIN reports the abort or zeroize result |
-| ENUM_ST_SEQ_FIN | ENUM_ST_SEQ_IDLE | Status accepted | Status handshake acknowledged by `m_aesgcm_xing_sts` |
+| ENUM_ST_SEQ_FIN | ENUM_ST_SEQ_IDLE | Status accepted | Status handshake acknowledged by `u_xing_sts` |
 
 Global overrides (drawn in the panel of the figure, exact guards in its `CONDITION_MAPPING` tab):
 
@@ -1477,7 +2039,7 @@ Purpose, owning block, clock and reset: sequences the digit-serial multiplier fo
 
 #### FSM hsk (four-phase requester)
 
-Purpose, owning block, clock and reset: four-phase request/acknowledge requester shared by the two DMA channels (instances 0 input, 1 output; `m_aesgcm_dma_ch`) and by the senders of the crossing bundles (`m_aesgcm_xing_cfg`, `m_aesgcm_xing_sts`, command handshakes); CLK-BUS or CLK-CORE of the owner; reset state `ENUM_ST_HSK_IDLE`.
+Purpose, owning block, clock and reset: four-phase request/acknowledge requester shared by the two DMA channels (instances 0 input, 1 output; `m_aesgcm_dma_ch`) and by the source half of every crossing bundle (`m_aesgcm_xing_bdl`); CLK-BUS or CLK-CORE of the owner; reset state `ENUM_ST_HSK_IDLE`.
 
 | Mode/state | Entry condition | State function | Hold behavior | Outputs / side effects |
 |---|---|---|---|---|
@@ -1493,7 +2055,7 @@ Purpose, owning block, clock and reset: four-phase request/acknowledge requester
 
 #### FSM hsr (four-phase responder for crossing bundles)
 
-Purpose, owning block, clock and reset: receiver side of a four-phase bundle transfer; owner `m_aesgcm_xing_cfg` and `m_aesgcm_xing_sts` receiver halves; CLK of the receiving domain; reset state `ENUM_ST_HSR_IDLE`.
+Purpose, owning block, clock and reset: receiver side of a four-phase bundle transfer; owner the destination half of `m_aesgcm_xing_bdl`; CLK of the receiving domain; reset state `ENUM_ST_HSR_IDLE`.
 
 | Mode/state | Entry condition | State function | Hold behavior | Outputs / side effects |
 |---|---|---|---|---|
@@ -1593,6 +2155,7 @@ An FSM that has an invalid state encoding returns to its IDLE state (RTL rule EN
 | WF-020 | OP-006: GMAC (payload length 0) | Success corner | `aesgcm_datalen`, `fsm_seq_state`, `tagout` | figures/WF-020_gmac.svg | 2026-11-25 |
 | WF-021 | OP-016: context export and import | Success | `aesgcm_ctxx_*`, CDC-007 handshake, `fsm_ctx_state` | figures/WF-021_ctx_export.svg | 2026-11-25 |
 | WF-022 | DEC-017: GHASH feed-forward pipeline, batches of 4, 4 and 2 blocks with N = 4 | Corner: one extra clock of GHASH latency | `ghash_in_valid`, `in_count`, `pp_valid`, `ghash_y` | figures/WF-022_ghash_pipe.svg | 2026-11-25 (decision DEC-017) |
+| WF-023 | DEC-022: abort through the command crossing and its acknowledgement | Corner: the control bit stays 1 until the status report with cmd_ack | `aesgcm_ctrl.abort`, `cmd_send`, `cmd_valid`, `fsm_seq_state`, `sts_valid`, `aesgcm_sts.busy` | figures/WF-023_cmd_ack.svg | Added for DEC-022 by rule R-057 (2026-11-26) |
 | WF-018 | Reset during an active message | Corner | `i_rst_n_bus`, `i_rst_n_core`, handshakes | figures/WF-018_reset.svg | 2026-11-25 |
 
 
@@ -2935,6 +3498,61 @@ Each figure is rendered from the WaveJSON source beside it (the file `figures/WF
 
 *Figure WF-022. WF-022 GHASH feed-forward pipeline, N = 4, batches of 4, 4 and 2 blocks (CORE clock). Source: `figures/WF-022_ghash_pipe.json`.*
 
+![WF-023 DEC-022: abort through the command crossing, cleared by the acknowledging status report](figures/WF-023_cmd_ack.svg)
+
+```wavedrom
+{
+ "head": {
+  "text": "WF-023 DEC-022: abort through the command crossing, cleared by the acknowledging status report"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p..................."
+  },
+  {
+   "name": "aesgcm_ctrl.abort",
+   "wave": "0.1..............0.."
+  },
+  {
+   "name": "cmd_send (u_xing_cmd)",
+   "wave": "0..10..............."
+  },
+  {
+   "name": "cmd_valid (CORE)",
+   "wave": "0.....10............"
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=......=...=...=....",
+   "data": [
+    "PAY",
+    "ABRT",
+    "FIN",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "sts_valid cmd_ack=1",
+   "wave": "0..............10..."
+  },
+  {
+   "name": "hw clear abort",
+   "wave": "0...............10.."
+  },
+  {
+   "name": "aesgcm_sts.busy",
+   "wave": "1...............0..."
+  }
+ ],
+ "foot": {
+  "text": "Example: abort written at bus clock 2 is sent at clock 3, reaches the sequencer at clock 6, FIN reports cmd_ack at clock 15 and the bit reads 0 from clock 17"
+ }
+}
+```
+
+*Figure WF-023. WF-023 DEC-022: abort through the command crossing, cleared by the acknowledging status report. Source: `figures/WF-023_cmd_ack.json`.*
+
 Active edge is the rising edge of the clock of the domain named by the signal; values are sampled at the edge. Cycle table of the setup phase (AES-128, one lane, REF-008 latency C10):
 
 | Cycle / event | Input condition | State/action | Output condition |
@@ -2954,6 +3572,10 @@ Active edge is the rising edge of the clock of the domain named by the signal; v
 5. *Throughput.* The AES core accepts one batch per clock after configuration (REF-008, II = 1). GHASH consumption equals `PARA_AES_LANE_NUM` blocks per clock for `PARA_GHASH_ARCH` = 2, one block per clock for 1 and `PARA_GHASH_DIGIT_W`/128 blocks per clock for 0 (REQ-PERF-002). The sustained message rate is the minimum of the AES rate, the GHASH rate and the bus rate (DW bits per bus clock).
 6. *Message turnaround.* The AES core is zeroized and reconfigured per message (REF-008 single-context behavior); the two core messages of a GCM message (setup and payload) therefore each pay a configuration handshake and the pipeline latency.
 
+7. *Commands (DEC-022).* Example 3: software writes `aesgcm_ctrl` = 0x102 (en, abort) during a payload. `m_aesgcm_bus_ctl` sends the command bundle {abort = 1} through `u_xing_cmd` and flushes the input FIFO and the unpacker; the sequencer goes PAY → ABRT → FIN; the FIN status report carries `cmd_ack` = 1 and `msg_end` = 1, so `aesgcm_ctrl.abort` reads 0 and `aesgcm_sts.busy` reads 0 after that report (WF-023). A `zeroize` received while idle is carried out in IDLE and reported with `zeroized` = 1 and `cmd_ack` = 1.
+8. *Context slot layout (DEC-023).* Example 4: a suspend after 32 AAD bytes and 48 payload bytes of a message with 32 AAD bytes and 96 payload bytes stores word 16 = 0 (AAD remainder), word 17 = 48 (payload remainder), word 18 = 32, word 19 = 96 and word 15 = 5 (next counter: 2 + 3 blocks); `aesgcm_ctx_cons_a` reads 32 and `aesgcm_ctx_cons_d` reads 48; after `resume` the slot bit of `aesgcm_sts.ctx_vld` reads 0.
+9. *DMA burst against the FIFO depth (DEC-024).* Example 5: `PARA_AXI_DATA_W` = 128, N = 1, `aesgcm_dmacfg.in_burst` = 4 (16 beats of 16 bytes = 256 bytes) needs 256 / 16 + 1 = 17 entries; with `PARA_FIFO_DEPTH` = 16 the start is rejected with `CFG_ERR` (`aesgcm_err_code.code` = 1). The same burst with `PARA_FIFO_DEPTH` = 32 starts. Example 6: a GCM decryption that ends with `TAG_FAIL` leaves no entry in the input FIFO: the status report with a nonzero error code flushes the input FIFO and the packer.
+
 ### 10.5 Memories and storage
 
 All storage is registers; no SRAM macro is assumed (ASM-010).
@@ -2962,7 +3584,7 @@ All storage is registers; no SRAM macro is assumed (ASM-010).
 |---|---|---|---|---|---|---|---|---|
 | MEM-001 | Input FIFO | `PARA_FIFO_DEPTH` × (N × 128 + N + 2) | Bus push of one entry, core read of one entry (up to N blocks) | 1 core clock | Byte padding by formatter | Empty | None (ASM-009) | Library FIFO `m_vlsit_afifo_top` (`PARA_CLK_ASYNC` = 1) or `m_vlsit_sfifo_top` (0), register array (DEC-016, DEC-018) |
 | MEM-002 | Output FIFO | `PARA_FIFO_DEPTH` × (N × 128 + N + 1) | Core write of one entry, bus pop by beats after unpacking | 1 bus clock | Last block truncated by formatter | Empty | None | Library FIFO as MEM-001 (DEC-016, DEC-018) |
-| MEM-003 | Context slots | `PARA_GCM_CTX_NUM` × about 900 bit (key copy 256, H 128, E(K,J0) 128, Y 128, expected tag 128, counters and lengths about 140) | Context engine, one word per cycle | 1 core clock | Word | All slots invalid and zero | None | Register array |
+| MEM-003 | Context slots | `PARA_GCM_CTX_NUM` × 33 words of 32 bit (words 0 to 3 Y, 4 to 7 H, 8 to 11 E(K,J0), 12 to 14 IV, 15 next counter, 16 AAD remainder, 17 payload remainder, 18 AAD total, 19 payload total, 20 flags {decipher, pass, tag length, key size}, 21 to 28 key, 29 to 32 expected tag); with `PARA_GCM_CTX_MODE` = 1 one buffer whose words 0 to 20 are exported (DEC-023) | Context engine, one word per cycle | 1 core clock | Word | All slots invalid and zero | None | Register array; a slot is released when its context is resumed or freed |
 | MEM-004 | Key store | 256 bit | Key select | 0 | none | Zero | None | Registers, zeroized |
 | MEM-005 | Hash-subkey powers | `PARA_AES_LANE_NUM` × 128 (aggregated) or 2 × 128 (pipelined) or 128 (otherwise) | GHASH | 0 | none | Zero | None | Registers |
 
@@ -3053,20 +3675,20 @@ Event names map to field names: DONE `done`; TAG_FAIL `tagf`; CFG_ERR `cerr`; LE
 |---|---|---|---|---|
 | `aesgcm_cap.*` | Status in | Constants derived from the parameters | BUS | Static |
 | `aesgcm_ctrl.start` | `rwi`: control out, hardware load | Start request of `m_aesgcm_bus_ctl`; load 0 when the bundle holding register accepts the snapshot | BUS | Software write wins over the hardware load; software shall not rewrite while 1 |
-| `aesgcm_ctrl.abort`, `.zeroize`, `.suspend`, `.resume`, `.free`, `.key_new` | `rwi` | Command request to CDC-005 (key_new, free: in bundle); load 0 when the command is acknowledged | BUS | As `start` |
+| `aesgcm_ctrl.abort`, `.zeroize`, `.suspend`, `.resume`, `.free`, `.key_new` | `rwi` | `abort`, `zeroize`, `suspend`, `free`: command bundle of CDC-005; `resume`: configuration bundle with the resume code; `key_new`: latches tag length and key size in `m_aesgcm_bus_ctl`. Hardware load 0: `abort`, `zeroize`, `suspend` when a status report acknowledges the commands, `free` when the command bundle is accepted, `resume` when its bundle is accepted or rejected, `key_new` at once (DEC-022) | BUS | Hardware load wins over a same-cycle software write (generator behavior) |
 | `aesgcm_ctrl.en` | `rw` control out | Enable of `m_aesgcm_bus_ctl` | BUS | Level |
 | `aesgcm_cfg.*`, `aesgcm_aadlen.len`, `aesgcm_datalen.len`, `aesgcm_keywait.clks`, `aesgcm_iv_*`, `aesgcm_tagin_*` | `rw` control out | Fields of the configuration snapshot | BUS (snapshot crosses by CDC-001) | Sampled once at `start` |
 | `aesgcm_key_0` to `aesgcm_key_7` | `wo` control out, hardware clear | Key words of the snapshot; clear input driven by zeroize completion and by the bundle-holding-register clear | BUS | Read as zero; clear wins over a same-cycle write |
 | `aesgcm_tagout_*`, `aesgcm_sts.*` (except `sec_only`), `aesgcm_err_code.*`, `aesgcm_failcnt.cnt`, `aesgcm_ctx_cons_*` | Status in | Status bundle of CDC-002 held in `m_aesgcm_bus_ctl` | BUS (crossed by CDC-002) | Stable after DONE; software reads them after the DONE event |
 | `aesgcm_sts.sec_only` | Status in | Resynchronized `i_gcm_secure_only` | BUS | Static |
-| `aesgcm_fifosts.*` | Status in | Bus-side FIFO level and flags | BUS | Live |
+| `aesgcm_fifosts.in_full`, `.out_empty` | Status in | Input FIFO full flag; output data empty (output FIFO empty and no beat held by the unpacker). The library FIFOs give no occupancy in the BUS domain, so the level fields were removed (DEC-020) | BUS | Live |
 | `aesgcm_irq_raw.*` | `w1c`: hardware load | Event pulses of `m_aesgcm_bus_ctl` (load value 1 with load enable for one cycle per event) | BUS | Hardware load wins over a software clear in the same cycle, so a new event is kept |
 | `aesgcm_irq_en.*`, `aesgcm_irq_inj.*` | `rw` control out | Mask and injection of `m_aesgcm_bus_ctl` | BUS | Injection acts on the rising edge |
 | `aesgcm_irq_sts.*` | Status in | `aesgcm_irq_raw` AND `aesgcm_irq_en` | BUS | Drives `o_int_aesgcm` |
 | `aesgcm_dmacfg.*` | `rw` control out | Channel enables and burst sizes of `m_aesgcm_dma_ch` | BUS | Static during a message |
 | `aesgcm_pio_din.data` | `rw` control out | Word pushed when `o_reg_wr_en` and `o_reg_wr_addr` select this register | BUS | One push per write |
 | `aesgcm_pio_dout.data` | Status in | Output FIFO head word; popped when `o_reg_rd_en` and `o_reg_rd_addr` select this register | BUS | One pop per read |
-| `aesgcm_ctxx_0` to `aesgcm_ctxx_23` | `rwi` | Context export word (hardware load) and import word (software write) of CDC-007 | BUS | Valid between suspend and resume only |
+| `aesgcm_ctxx_0` to `aesgcm_ctxx_23` | `rwi` | Words 0 to 20 of the context image (MEM-003): hardware load by the export after a suspend report, software write before `resume` (imported word by word through CDC-007); words 21 to 23 are unused | BUS | Valid between suspend and resume only |
 
 The status bundle crosses from CORE to BUS (CDC-002), so the inputs of the CSR are in the register clock domain as the generator requires (section 11.1).
 
@@ -3087,11 +3709,11 @@ Behavior is that of the generated module for `Asynchronous` = 0 (generator refer
 
 ## 12. Error handling and recovery
 
-Error causes are reported by the events of section 6.4 and by `aesgcm_err_code`. The first error of a message sets `aesgcm_err_code.code`; a later error raises its raw event but does not overwrite the code. A command error (rejected at start) never starts the message; a message error ends the message through `ENUM_ST_SEQ_ABRT` unless the table says otherwise.
+Error causes are reported by the events of section 6.4 and by `aesgcm_err_code`. The first error of a message sets `aesgcm_err_code.code`; a later error raises its raw event but does not overwrite the code. A command error (rejected at start) never starts the message; a message error ends the message through `ENUM_ST_SEQ_ABRT` unless the table says otherwise, and the BUS side then flushes the input FIFO and the packer (DEC-024).
 
 | Error ID | Detection condition | Observable response/status | Interrupt | Clear/recovery | Reset behavior |
 |---|---|---|---|---|---|
-| ERR-001 | At start: mode 6, 7; mode 5 with `PARA_AES_GCM_EN` = 0; `tag_len` 5 to 7; `gcm_pass` 3; `cfb_seg` 8 to 15 with mode 2; `ctx_id` not below `ctx_num`; `dat_src` = 0 on the APB wrapper; key size or tag length different from the latched value of the key (REQ-FUNC-006); decipher = 0 with `gcm_pass` 1 or 2; decipher = 1 and `gcm_pass` = 0 with policy C absent or `aesgcm_sts.sec_only` = 1; AAD length not 0 in a legacy mode or in pass 2; export or import while secure-only | Message not started; `aesgcm_err_code.code` = 1 | CFG_ERR (`cerr`) | Software corrects registers and writes start again | Cleared |
+| ERR-001 | At start: mode 6, 7; mode 5 with `PARA_AES_GCM_EN` = 0; `tag_len` 5 to 7; `gcm_pass` 3; `cfb_seg` 8 to 15 with mode 2; `ctx_id` not below `ctx_num`; `dat_src` = 0 on the APB wrapper; DMA input channel enabled with a burst that needs more FIFO entries than `PARA_FIFO_DEPTH` (DEC-024); GCM start without a `key_new` since reset or the last zeroize; key size or tag length different from the latched value of the key (REQ-FUNC-006); decipher = 0 with `gcm_pass` 1 or 2; decipher = 1 and `gcm_pass` = 0 with policy C absent or `aesgcm_sts.sec_only` = 1; AAD length not 0 in a legacy mode or in pass 2; export or import while secure-only | Message not started; `aesgcm_err_code.code` = 1 | CFG_ERR (`cerr`) | Software corrects registers and writes start again | Cleared |
 | ERR-002 | Stream length differs from `aesgcm_aadlen` + `aesgcm_datalen` plus beat padding when the input FIFO is idle for the data timeout (message waits, no timeout) or more beats arrive than the lengths allow; lengths not a multiple of 16 in ECB or CBC; payload length 0 in a legacy mode | Message ended; code 2 | LEN_ERR (`lerr`) | Abort, then restart | Cleared |
 | ERR-003 | AES core reports error 3 (counter) | Code 3 | CTR_EXHAUST (`cexh`) | Abort and restart with a new IV | Cleared |
 | ERR-004 | Side-load requested without support, or `i_key_side_valid` not seen within `aesgcm_keywait.clks`; key size 128 on `i_key_side_size` = 0 with bits [127:0] nonzero is not checked | Message ended; code 4 | KEY_ERR (`kerr`) | Retry after the key manager is ready | Cleared |
@@ -3158,15 +3780,17 @@ The VLSIT RTL Design Rules v2 in `VLSIT_RTL_Design_Rule.md` (REF-003) are the ma
 | m_aesgcm_acc_apb_top | Structural wrapper without AXI4 ports | Top | BUS, CORE | Section 6.2 (APB profile) |
 | m_aesgcm_acc_axi_top | Structural wrapper with AXI4 ports | Top | BUS, CORE | Section 6.2 (AXI4 profile) |
 | m_aesgcm_bus_dom | BUS-domain structure: `u_bus_ctl`, `u_pio`, `u_dma_ch_0`, `u_dma_ch_1`, `u_axi_win` | `u_bus_dom` of each top | BUS | CSR ports, window sidebands, FIFO bus-side status, bundles |
-| m_aesgcm_xing | Crossing structure: `u_xing_cfg`, `u_xing_sts`, `u_fifo_0`, `u_fifo_1` | `u_xing` of each top | BUS and CORE | Bundles, commands, FIFO bus side and core side |
+| m_aesgcm_xing | Crossing structure: `u_xing_cfg`, `u_xing_sts`, `u_xing_cmd`, `u_xing_wreq`, `u_xing_wrsp`, `u_fifo_in`, `u_fifo_out`, `u_sync_sec_bus`, `u_sync_sec_core` | `u_xing` of each top | BUS and CORE | Bundles, commands, FIFO bus side and core side |
 | m_aesgcm_core_dom | CORE-domain structure: `u_seq`, `u_key_sel`, `u_fmt_in`, `u_fmt_out`, `u_ghash`, `u_tag`, `u_ctx`, `u_aes_core` | `u_core_dom` of each top | CORE | Bundles, FIFO core side, key side-load, AES core |
 | m_vlsit_csr_aesgcm | Generated APB CSR | `u_csr` | BUS | APB, register ports |
 | m_aesgcm_bus_ctl | Command decode, legality check, snapshot, events, DMA conditions | `u_bus_dom/u_bus_ctl` | BUS | CSR ports, bundle, FIFO levels |
 | m_aesgcm_axi_win | AXI4 window (FSM axw and axr) | `u_bus_dom/u_axi_win` (generate-enabled by `PARA_AXI_EN`) | BUS | AXI4, FIFO bus side |
 | m_aesgcm_pio | PIO push/pop | `u_bus_dom/u_pio` | BUS | CSR sideband, FIFO bus side |
 | m_aesgcm_dma_ch | Four-phase DMA channel | `u_bus_dom/u_dma_ch_0`, `u_bus_dom/u_dma_ch_1` | BUS | FIFO state, req/ack |
-| m_aesgcm_fifo | Dual-clock width-converting FIFO | `u_fifo_0` (input), `u_fifo_1` (output) | BUS and CORE | Bus beats, core blocks |
-| m_aesgcm_xing_cfg, m_aesgcm_xing_sts | Bundle crossings | `u_xing_cfg`, `u_xing_sts` | BUS and CORE | Bundles, handshake |
+| m_aesgcm_fifo_in, m_aesgcm_fifo_out | Dual-clock FIFOs with library FIFO (structural) | `u_fifo_in`, `u_fifo_out` in `u_xing` | BUS and CORE | Bus beats, core entries |
+| m_aesgcm_pack, m_aesgcm_unpack | Bus-side packer and unpacker | `u_fifo_in/u_pack`, `u_fifo_out/u_unpack` | BUS | Beats, entries, DMA output condition |
+| m_aesgcm_xing_bdl | Bundle crossing (FSM hsk, FSM hsr) | `u_xing_cfg`, `u_xing_sts`, `u_xing_cmd`, `u_xing_wreq`, `u_xing_wrsp` | BUS and CORE | Bundles, handshake |
+| m_aesgcm_hs_xing | Request and acknowledge crossing (library `m_vlsit_ahs4_top` or registered) | `u_xing_*/u_hs_xing` | BUS and CORE | Request, acknowledge |
 | m_aesgcm_seq | Message sequencer (FSM seq) | `u_seq` | CORE | Core interfaces, GHASH, FIFO, tag |
 | m_aesgcm_key_sel | Key select, side-load, tag-length latch | `u_key_sel` | CORE | Bundle, `i_key_side*` |
 | m_aesgcm_fmt_in, m_aesgcm_fmt_out | Block formation and truncation | `u_fmt_in`, `u_fmt_out` | CORE | FIFO, core |
@@ -3227,12 +3851,17 @@ Golden models: (a) an independent software GCM model that implements SP 800-38D 
 | TEST-022 | REQ-CLK-002 | Asynchronous clocks with random phase and ratio | No data loss; CDC tool clean | Random + CDC tool | `PARA_CLK_ASYNC` = 1 |
 | TEST-023 | REQ-CLK-003 | Ratios 1:1, 3:2, 4:1, 1:4 with fixed phase; bundle stability check | No data loss; STA clean | Directed + STA | `PARA_CLK_ASYNC` = 0 |
 | TEST-024 | REQ-RESET-001, REQ-RESET-002 | Reset of each domain at each sequencer state; reset release skew | Idle; storage zero; `aesgcm_ctrl.zeroize` recovers | Directed | All |
-| TEST-025 | REQ-PARAM-001 | Illegal parameter values | Elaboration stops with a message | Elaboration test | Illegal sets |
+| TEST-025 | REQ-PARAM-001 | Illegal parameter values given to `m_aesgcm_param_check` | Elaboration stops with a message | Elaboration test (lint flow) | Illegal sets |
 | TEST-026 | REQ-ERR-001 | Every error of section 12, including simultaneous causes | Event and code per section 12 | Directed | All |
 | TEST-027 | REQ-PERF-001, REQ-PERF-002 | Latency and rate measurement in every configuration | Not above the formula of section 13.2 | Cycle-accurate simulation | All |
 | TEST-028 | REQ-SEC-001 | Zeroize in every state; inspect key store, H, slots, FIFOs, AES core | All zero within 64 clocks | Directed + hierarchical inspection | All |
 | TEST-030 | REQ-FUNC-016, REQ-PERF-002 | DEC-017 example: N = 4, batches of 4, 4 and 2 blocks with `PARA_GHASH_PIPE` 0 and 1 | Same final Y as SP 800-38D Algorithm 2 over 10 blocks; with PIPE = 1 each accumulator update one clock later | Directed + model | N = 4 |
 | TEST-031 | REQ-FUNC-007, REQ-PERF-002 | DEC-018 examples: AAD 20 bytes, payload 70 bytes, N = 4 and N = 1, 32-bit beats | Input FIFO entries 3 (N = 4) and 7 (N = 1) with the lane masks of section 10.4; output and tag equal to the model | Directed + FIFO monitor | N = 1, N = 4 |
+| TEST-032 | REQ-PARAM-001 | DEC-019: `m_aesgcm_param_check` with `PARA_AES_LANE_NUM` = 5, `PARA_GHASH_PIPE` = 1 with `PARA_GHASH_ARCH` = 0, `PARA_FIFO_DEPTH` = 12 | Each elaboration stops with its message; legal values elaborate | Elaboration test (lint flow) | Illegal sets |
+| TEST-033 | REQ-FUNC-007 | DEC-020: PIO stream with the output read while the last beat is held by the unpacker | `aesgcm_fifosts.out_empty` reads 0 until the last beat is read | Directed | PIO |
+| TEST-034 | REQ-FUNC-012 | DEC-022 Example 3 and WF-023: abort during the payload | `aesgcm_ctrl.abort` and `aesgcm_sts.busy` read 0 after the acknowledging report; next message correct | Directed + waveform | All |
+| TEST-035 | REQ-FUNC-011 | DEC-023 Example 4: suspend, urgent message, resume | `aesgcm_ctx_cons_a` = 32, `aesgcm_ctx_cons_d` = 48, final ciphertext and tag equal the uninterrupted message, slot released | Directed + model | `PARA_GCM_CTX_NUM` >= 1 |
+| TEST-036 | REQ-ERR-001 | DEC-024 Examples 5 and 6: DMA burst of 17 entries with depth 16; tag failure followed by a new message | `CFG_ERR` code 1; the next message after `TAG_FAIL` is correct | Directed | DMA, policy C |
 | TEST-029 | REQ-SEC-005 | Many failed tags | Counter increments and saturates; reset only clears | Directed | CFG-LINK |
 
 ### 15.3 Assertions and coverage
@@ -3426,7 +4055,13 @@ Technical assumptions, dependencies and decisions with their effect on behavior,
 | DEC-016 | Decision (designer, 2026-11-25) | Reuse library modules of `VLSIT_OPEN_IP_CORE` instead of new RTL: `m_vlsit_afifo_top` (data FIFOs, asynchronous), `m_vlsit_sfifo_top` (data FIFOs, synchronous), `m_vlsit_ahs4_top` (request and acknowledge of the bundle crossings, asynchronous; the bundle stays stable in the source register), `m_vlsit_rst_sync` (reset synchronizers), `m_vlsit_afifo_cell_sync` (resynchronization of `i_gcm_secure_only`). Options: reuse all (chosen), reuse part, write all new. Reason: already checked, uniform CDC structure, effort moves to GHASH, sequencer and AXI window. The synchronous-mode handshake has no library equivalent and is new RTL | Section 7.2, 10.5, 14.2; REQ-CLK-002, REQ-CLK-003 | Confirmed by the designer |
 | DEC-017 | Decision (designer, 2026-11-25) | `PARA_GHASH_PIPE` = 1 is a feed-forward pipeline (option A); options were feed-forward, two interleaved accumulators (B, needs equal batch sizes), remove the parameter (C). Reason: correct for any batch size, full rate, simple | Section 8, 13.1, WF-022, TEST-030; REQ-FUNC-016, REQ-PERF-002 | Confirmed by the designer |
 | DEC-018 | Decision (designer, 2026-11-25) | One FIFO entry carries up to N blocks with lane mask and segment tag; `PARA_FIFO_DEPTH` counts entries (option A); options were N-block entries, one block per entry (B, limits N > 1 to one block per clock), N parallel FIFOs (C). Reason: one library FIFO per direction keeps the N-block rate | Section 8, 10.4, 10.5, TEST-031; REQ-FUNC-007, REQ-PERF-002 | Confirmed by the designer |
-| DEC-015 | Decision (user) | FSM seq is drawn as two linked views (setup, data) because a single page could not reach zero crossings | Section 10.1, rule R-071 | Closed |
+| DEC-019 | Decision (designer, 2026-11-25) | Illegal parameters are checked by the verification-only module `m_aesgcm_param_check` (option A); options were a separate checker, an instance of a missing module, a P14 waiver for `$error`. Reason: rule P14 keeps system tasks out of design RTL | Section 8.3; REQ-PARAM-001, TEST-025 | Confirmed by the designer |
+| DEC-020 | Decision (designer, 2026-11-25) | `aesgcm_fifosts` keeps only `in_full` and `out_empty`; the level and the `in_empty`, `out_full` fields are removed (option A); options were removing them, adding occupancy outputs to the library FIFOs, own Gray counters. Reason: the library FIFOs give no BUS-domain occupancy | Section 11; workbook | Confirmed by the designer |
+| DEC-021 | Decision (designer, 2026-11-25) | CFB segments of 1, 2 or 4 bits take one stream byte each, left-justified (option A); options were one byte per segment, rejecting them with `CFG_ERR`, bit packing | Section 9.2 | Confirmed by the designer |
+| DEC-022 | Decision (designer, 2026-11-25, author choices accepted) | Commands `abort`, `zeroize`, `suspend`, `free` share one command crossing; `abort`, `zeroize` and `suspend` are cleared by a status report that acknowledges them; `zeroize` received in IDLE is carried out without leaving IDLE; `aesgcm_sts.phase` shows the sequencer state of the last status report | Sections 7.2, 10.1, 11.3 | Confirmed by the designer |
+| DEC-023 | Decision (designer, 2026-11-25, author choices accepted) | Context slot of 33 words, export of words 0 to 20 (no key, no expected tag); a slot is released by its resume | Section 10.5 MEM-003, 11.3 | Confirmed by the designer |
+| DEC-024 | Decision (designer, 2026-11-25, author choices accepted) | A DMA input burst that needs more entries than `PARA_FIFO_DEPTH` is a `CFG_ERR` at start; the input FIFO is flushed when a message ends with an error; module names `m_aesgcm_fifo_in`, `m_aesgcm_fifo_out`, `m_aesgcm_pack`, `m_aesgcm_unpack`, `m_aesgcm_xing_bdl`, `m_aesgcm_hs_xing` replace `m_aesgcm_fifo`, `m_aesgcm_xing_cfg`, `m_aesgcm_xing_sts` | Sections 5.1, 12, 14.2 | Confirmed by the designer |
+| DEC-015 | Decision (user, revised 2026-11-25) | FSM seq is drawn as three linked views (setup, data, completion and exception); the first decision of two views was revised because a two-view layout could not reach zero crossings and connector conflicts | Section 10.1, rule R-071 | Closed |
 | ASM-001 | Assumption | Exact SoC and product are not defined; the two application classes are drone/vehicle link and SoC secure subsystem | Section 1.2 | Open |
 | ASM-002 | Assumption | Numeric needs of section 1.4 and 13.2 (packet 16 to 280 bytes, AAD 8 to 32 bytes, 10 Mb/s, 100 us, 8 MiB image in 100 ms, 1 lane, 50 to 100 MHz) are proposals accepted by the user for review | Sizing of lanes, FIFO depth, GHASH architecture | Review with product owner |
 | ASM-003 | Assumption | Frequency goals: core 50 to 400 MHz, bus 10 to 200 MHz | PPA-001 | TBD-001 |
@@ -3450,7 +4085,6 @@ Technical assumptions, dependencies and decisions with their effect on behavior,
 | TBD-004 | TBD | SDC form for the synchronous mode (`set_multicycle_path` versus `set_max_delay`) for the actual ratio. Impact: timing closure of CDC-001 to 007 with `PARA_CLK_ASYNC` = 0. Decision needed: STA tool and integrator ratio | Section 17.1.3 | Open |
 | TBD-005 | TBD | Safety goal and integrity level of the flight-controller use. Impact: need for parity, ECC, lockstep. Decision needed: product owner | Section 18 | Open |
 | TBD-006 | TBD | Emulation and post-silicon plan. Impact: none on RTL. Decision needed: program plan | Section 15.1 | Open |
-| TBD-009 | TBD | FSM diagram geometry not closed for: seq_data, seq_setup. Impact: figure missing, tables complete. Decision needed: approve a manual layout or accept the pending figure | Section 10.1 | Open |
 | TBD-008 | TBD | Lower-level block diagrams of `m_aesgcm_bus_dom`, `m_aesgcm_xing` and `m_aesgcm_core_dom` (rule R-075 applies to every required block diagram). Impact: reviewers see only the top-level decomposition. Decision needed: whether the user requires these views | Section 5.2 | Open |
 | TBD-007 | TBD | Side-channel masking option. Impact: area and latency of AES and GHASH. Decision needed: threat model | Section 18 | Open |
 

@@ -1,76 +1,90 @@
 {
- "page_name": "FSM_AXW",
- "out_name": "aesgcm_fsm_axw.drawio",
- "function": "AXI4 write window",
- "initial": "ENUM_ST_AXW_IDLE",
- "reset": {
-  "signal": "i_rst_n_bus",
-  "active_level": "low"
- },
- "states": [
-  {
-   "name": "ENUM_ST_AXW_IDLE",
-   "conditional_exit": true,
-   "hold_conditions": []
+  "page_name": "FSM_AXW",
+  "out_name": "aesgcm_fsm_axw.drawio",
+  "function": "AXI4 write window",
+  "initial": "ENUM_ST_AXW_IDLE",
+  "reset": {
+    "signal": "i_rst_n_bus",
+    "active_level": "low"
   },
-  {
-   "name": "ENUM_ST_AXW_DATA",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_AXW_RESP",
-   "conditional_exit": true,
-   "hold_conditions": []
+  "states": [
+    {
+      "name": "ENUM_ST_AXW_IDLE",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_AXW_DATA",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_AXW_RESP",
+      "conditional_exit": true,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_AXW_IDLE",
+      "dst": "ENUM_ST_AXW_IDLE",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_AXW_DATA",
+      "dst": "ENUM_ST_AXW_DATA",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_AXW_RESP",
+      "dst": "ENUM_ST_AXW_RESP",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_AXW_IDLE",
+      "dst": "ENUM_ST_AXW_DATA",
+      "label": "address accepted"
+    },
+    {
+      "src": "ENUM_ST_AXW_DATA",
+      "dst": "ENUM_ST_AXW_RESP",
+      "label": "last beat"
+    },
+    {
+      "src": "ENUM_ST_AXW_RESP",
+      "dst": "ENUM_ST_AXW_IDLE",
+      "label": "response accepted"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "address accepted",
+      "expression": "i_axi_awvalid && o_axi_awready"
+    },
+    {
+      "label": "last beat",
+      "expression": "i_axi_wvalid && o_axi_wready && i_axi_wlast"
+    },
+    {
+      "label": "response accepted",
+      "expression": "i_axi_bready"
+    }
+  ],
+  "layout": {
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_AXW_IDLE": [
+        740,
+        460
+      ],
+      "ENUM_ST_AXW_DATA": [
+        260,
+        200
+      ],
+      "ENUM_ST_AXW_RESP": [
+        1220,
+        200
+      ]
+    }
   }
- ],
- "transitions": [
-  {
-   "src": "ENUM_ST_AXW_IDLE",
-   "dst": "ENUM_ST_AXW_IDLE",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_AXW_DATA",
-   "dst": "ENUM_ST_AXW_DATA",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_AXW_RESP",
-   "dst": "ENUM_ST_AXW_RESP",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_AXW_IDLE",
-   "dst": "ENUM_ST_AXW_DATA",
-   "label": "address accepted"
-  },
-  {
-   "src": "ENUM_ST_AXW_DATA",
-   "dst": "ENUM_ST_AXW_RESP",
-   "label": "last beat"
-  },
-  {
-   "src": "ENUM_ST_AXW_RESP",
-   "dst": "ENUM_ST_AXW_IDLE",
-   "label": "response accepted"
-  }
- ],
- "condition_aliases": [
-  {
-   "label": "address accepted",
-   "expression": "i_axi_awvalid && o_axi_awready"
-  },
-  {
-   "label": "last beat",
-   "expression": "i_axi_wvalid && o_axi_wready && i_axi_wlast"
-  },
-  {
-   "label": "response accepted",
-   "expression": "i_axi_bready"
-  }
- ],
- "layout": {
-  "margin": 160
- }
 }

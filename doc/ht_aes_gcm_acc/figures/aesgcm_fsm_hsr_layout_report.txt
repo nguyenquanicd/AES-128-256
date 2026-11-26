@@ -2,15 +2,15 @@ FSM: four-phase responder
 STATES: 3, TRANSITIONS: 5
 GLOBAL CONTROLS: 0 (notation panel; exact guards in CONDITION_MAPPING)
 RESET ENTRY: 1, CONTINUATION ENTRIES: 0
-LAYOUT: flow-lr-snake-2-g100
+LAYOUT: manual
 CROSSINGS: 0
 CONNECTOR CONFLICTS: 0 (minimum clearance 50 px)
 LABEL CONFLICTS: 0
-MAX LABEL DISTANCE: 20.0 px (maximum 120 px)
+MAX LABEL DISTANCE: 0.0 px (maximum 120 px)
 NODE HITS: 0
-BENDS: 8
-MINIMUM GAP: 100.0 px (minimum 100 px)
-TEXT FIT: PASS (worst fill ratio 0.86)
+BENDS: 9
+MINIMUM GAP: 220.0 px (minimum 180 px)
+TEXT FIT: PASS (worst fill ratio 0.84)
 DISTRIBUTION: PASS (2 x-centers, 2 y-centers)
-PAGE: 806 x 383 px
+PAGE: 1139 x 533 px
 RESULT: PASS

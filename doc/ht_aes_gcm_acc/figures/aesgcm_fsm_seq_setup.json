@@ -1,208 +1,162 @@
 {
- "page_name": "FSM_SEQ_SETUP",
- "out_name": "aesgcm_fsm_seq_setup.drawio",
- "function": "message sequencer, setup view",
- "initial": "ENUM_ST_SEQ_IDLE",
- "states": [
-  {
-   "name": "ENUM_ST_SEQ_IDLE",
-   "conditional_exit": true,
-   "hold_conditions": []
+  "page_name": "FSM_SEQ_SETUP",
+  "out_name": "aesgcm_fsm_seq_setup.drawio",
+  "function": "message sequencer, setup view",
+  "initial": "ENUM_ST_SEQ_IDLE",
+  "states": [
+    {
+      "name": "ENUM_ST_SEQ_IDLE",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_KEY",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_SU_CFG",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_SU_RUN",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_POW",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_REST",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_AAD",
+      "conditional_exit": false,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_SEQ_PY_CFG",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_SEQ_IDLE",
+      "dst": "ENUM_ST_SEQ_IDLE",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_KEY",
+      "dst": "ENUM_ST_SEQ_KEY",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_CFG",
+      "dst": "ENUM_ST_SEQ_SU_CFG",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_RUN",
+      "dst": "ENUM_ST_SEQ_SU_RUN",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_POW",
+      "dst": "ENUM_ST_SEQ_POW",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_REST",
+      "dst": "ENUM_ST_SEQ_REST",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_SEQ_IDLE",
+      "dst": "ENUM_ST_SEQ_KEY",
+      "label": "new message"
+    },
+    {
+      "src": "ENUM_ST_SEQ_IDLE",
+      "dst": "ENUM_ST_SEQ_REST",
+      "label": "resume"
+    },
+    {
+      "src": "ENUM_ST_SEQ_KEY",
+      "dst": "ENUM_ST_SEQ_SU_CFG",
+      "label": "key ready GCM"
+    },
+    {
+      "src": "ENUM_ST_SEQ_KEY",
+      "dst": "ENUM_ST_SEQ_PY_CFG",
+      "label": "key ready no setup"
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_CFG",
+      "dst": "ENUM_ST_SEQ_SU_RUN",
+      "label": "core configured"
+    },
+    {
+      "src": "ENUM_ST_SEQ_SU_RUN",
+      "dst": "ENUM_ST_SEQ_POW",
+      "label": "setup results"
+    },
+    {
+      "src": "ENUM_ST_SEQ_POW",
+      "dst": "ENUM_ST_SEQ_AAD",
+      "label": "powers ready"
+    },
+    {
+      "src": "ENUM_ST_SEQ_REST",
+      "dst": "ENUM_ST_SEQ_POW",
+      "label": "context restored"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "context restored",
+      "expression": "w_ctx_done"
+    },
+    {
+      "label": "core configured",
+      "expression": "i_core_cfg_valid && o_core_cfg_ready"
+    },
+    {
+      "label": "key ready GCM",
+      "expression": "w_key_ready && w_mode_gcm && (w_pass == 2'd0 || w_pass == 2'd1)"
+    },
+    {
+      "label": "key ready no setup",
+      "expression": "w_key_ready && (!w_mode_gcm || w_pass == 2'd2)"
+    },
+    {
+      "label": "new message",
+      "expression": "w_bundle_valid && !w_cmd_resume && w_cfg_legal"
+    },
+    {
+      "label": "powers ready",
+      "expression": "w_pow_done"
+    },
+    {
+      "label": "resume",
+      "expression": "w_cmd_resume && w_slot_valid"
+    },
+    {
+      "label": "setup results",
+      "expression": "w_h_captured && w_ej0_captured"
+    }
+  ],
+  "global_overrides": [],
+  "layout": {
+    "margin": 160
   },
-  {
-   "name": "ENUM_ST_SEQ_KEY",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_SU_CFG",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_SU_RUN",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_POW",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_REST",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_ABRT",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_FIN",
-   "conditional_exit": true,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_AAD",
-   "conditional_exit": false,
-   "hold_conditions": []
-  },
-  {
-   "name": "ENUM_ST_SEQ_PY_CFG",
-   "conditional_exit": false,
-   "hold_conditions": []
+  "reset": {
+    "signal": "i_rst_n_core",
+    "active_level": "low"
   }
- ],
- "transitions": [
-  {
-   "src": "ENUM_ST_SEQ_IDLE",
-   "dst": "ENUM_ST_SEQ_IDLE",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_KEY",
-   "dst": "ENUM_ST_SEQ_KEY",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_SU_CFG",
-   "dst": "ENUM_ST_SEQ_SU_CFG",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_SU_RUN",
-   "dst": "ENUM_ST_SEQ_SU_RUN",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_POW",
-   "dst": "ENUM_ST_SEQ_POW",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_REST",
-   "dst": "ENUM_ST_SEQ_REST",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_ABRT",
-   "dst": "ENUM_ST_SEQ_ABRT",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_FIN",
-   "dst": "ENUM_ST_SEQ_FIN",
-   "label": ""
-  },
-  {
-   "src": "ENUM_ST_SEQ_IDLE",
-   "dst": "ENUM_ST_SEQ_KEY",
-   "label": "new message"
-  },
-  {
-   "src": "ENUM_ST_SEQ_IDLE",
-   "dst": "ENUM_ST_SEQ_REST",
-   "label": "resume"
-  },
-  {
-   "src": "ENUM_ST_SEQ_KEY",
-   "dst": "ENUM_ST_SEQ_SU_CFG",
-   "label": "key ready GCM"
-  },
-  {
-   "src": "ENUM_ST_SEQ_KEY",
-   "dst": "ENUM_ST_SEQ_PY_CFG",
-   "label": "key ready no setup"
-  },
-  {
-   "src": "ENUM_ST_SEQ_SU_CFG",
-   "dst": "ENUM_ST_SEQ_SU_RUN",
-   "label": "core configured"
-  },
-  {
-   "src": "ENUM_ST_SEQ_SU_RUN",
-   "dst": "ENUM_ST_SEQ_POW",
-   "label": "setup results"
-  },
-  {
-   "src": "ENUM_ST_SEQ_POW",
-   "dst": "ENUM_ST_SEQ_AAD",
-   "label": "powers ready"
-  },
-  {
-   "src": "ENUM_ST_SEQ_REST",
-   "dst": "ENUM_ST_SEQ_POW",
-   "label": "context restored"
-  },
-  {
-   "src": "ENUM_ST_SEQ_ABRT",
-   "dst": "ENUM_ST_SEQ_FIN",
-   "label": "cleanup done"
-  },
-  {
-   "src": "ENUM_ST_SEQ_FIN",
-   "dst": "ENUM_ST_SEQ_IDLE",
-   "label": "status accepted"
-  }
- ],
- "condition_aliases": [
-  {
-   "label": "cleanup done",
-   "expression": "w_zero_done"
-  },
-  {
-   "label": "context restored",
-   "expression": "w_ctx_done"
-  },
-  {
-   "label": "core configured",
-   "expression": "i_core_cfg_valid && o_core_cfg_ready"
-  },
-  {
-   "label": "key ready GCM",
-   "expression": "w_key_ready && w_mode_gcm && (w_pass == 2'd0 || w_pass == 2'd1)"
-  },
-  {
-   "label": "key ready no setup",
-   "expression": "w_key_ready && (!w_mode_gcm || w_pass == 2'd2)"
-  },
-  {
-   "label": "new message",
-   "expression": "w_bundle_valid && !w_cmd_resume && w_cfg_legal"
-  },
-  {
-   "label": "powers ready",
-   "expression": "w_pow_done"
-  },
-  {
-   "label": "resume",
-   "expression": "w_cmd_resume && w_slot_valid"
-  },
-  {
-   "label": "setup results",
-   "expression": "w_h_captured && w_ej0_captured"
-  },
-  {
-   "label": "status accepted",
-   "expression": "w_status_ack"
-  }
- ],
- "global_overrides": [
-  {
-   "id": "G1",
-   "source": "ANY STATE except IDLE, FIN",
-   "destination": "ENUM_ST_SEQ_ABRT",
-   "expression": "w_cmd_abort || w_cmd_zeroize || w_fatal_err || w_keywait_expired",
-   "note": "Highest priority after reset. Fatal errors are LEN_ERR, CTR_EXHAUST, PROTO_ERR and KEY_ERR (side-load wait expired)."
-  }
- ],
- "layout": {
-  "margin": 160
- },
- "reset": {
-  "signal": "i_rst_n_core",
-  "active_level": "low"
- }
 }

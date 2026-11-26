@@ -423,49 +423,21 @@
   {
    "name": "aesgcm_fifosts",
    "offset": "0x74",
-   "description": "AES-GCM FIFO status register. Reports the fill state of the input and output data FIFOs.",
+   "description": "AES-GCM FIFO status register. Reports whether the input path can take data and the output path holds data.",
    "fields": [
-    {
-     "name": "in_lvl",
-     "bits": "[8:0]",
-     "type": "ro",
-     "reset": "0x0",
-     "description": "Input FIFO level. Number of 128-bit blocks in the input FIFO as seen from the bus.\n\nUsage: Read before PIO writes.\n\nValues:\n0x000 to 0x100 blocks (reset value 0x0).\n\nUnit: block of 128 bit.\n\nLimits: 0x0 to PARA_FIFO_DEPTH."
-    },
     {
      "name": "in_full",
      "bits": "[9]",
      "type": "ro",
      "reset": "0x0",
-     "description": "Input FIFO full flag. Reads 1 when no further block fits.\n\nUsage: Do not write the PIO data register while it reads 1.\n\nValues:\n0x0 room available (reset value);\n0x1 full.\n\nUnit: none.\n\nLimits: none."
-    },
-    {
-     "name": "in_empty",
-     "bits": "[10]",
-     "type": "ro",
-     "reset": "0x1",
-     "description": "Input FIFO empty flag. Reads 1 when no block is waiting.\n\nUsage: Diagnostic.\n\nValues:\n0x0 not empty;\n0x1 empty (reset value).\n\nUnit: none.\n\nLimits: none."
-    },
-    {
-     "name": "out_lvl",
-     "bits": "[24:16]",
-     "type": "ro",
-     "reset": "0x0",
-     "description": "Output FIFO level. Number of 128-bit blocks in the output FIFO as seen from the bus.\n\nUsage: Read before PIO reads.\n\nValues:\n0x000 to 0x100 blocks (reset value 0x0).\n\nUnit: block of 128 bit.\n\nLimits: 0x0 to PARA_FIFO_DEPTH."
-    },
-    {
-     "name": "out_full",
-     "bits": "[25]",
-     "type": "ro",
-     "reset": "0x0",
-     "description": "Output FIFO full flag. Reads 1 when the AES core output is stalled.\n\nUsage: Diagnostic.\n\nValues:\n0x0 room available (reset value);\n0x1 full.\n\nUnit: none.\n\nLimits: none."
+     "description": "Input FIFO full flag. Reads 1 when the input FIFO cannot take a further entry.\n\nUsage: Do not write the PIO data register while it reads 1.\n\nValues:\n0x0 room available (reset value);\n0x1 full.\n\nUnit: none.\n\nLimits: none."
     },
     {
      "name": "out_empty",
      "bits": "[26]",
      "type": "ro",
      "reset": "0x1",
-     "description": "Output FIFO empty flag. Reads 1 when no data is available.\n\nUsage: Do not read the PIO data register while it reads 1.\n\nValues:\n0x0 data available;\n0x1 empty (reset value).\n\nUnit: none.\n\nLimits: none."
+     "description": "Output data empty flag. Reads 1 when neither the output FIFO nor the bus-side unpacker holds data.\n\nUsage: Do not read the PIO data register while it reads 1.\n\nValues:\n0x0 data available;\n0x1 empty (reset value).\n\nUnit: none.\n\nLimits: none."
     }
    ]
   },

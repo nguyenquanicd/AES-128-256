@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FSM: message sequencer, setup view</title>
+  <style>body{font:16px system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#111}svg{max-width:100%;height:auto}a{color:#1457a6}</style>
+</head>
+<body>
+  <h1>FSM: message sequencer, setup view</h1>
+  <p>Initial state: <code>ENUM_ST_SEQ_IDLE</code></p>
+  <p>Reset entry: <code>i_rst_n_core</code> active-low.</p>
+  <figure><svg xmlns="http://www.w3.org/2000/svg" width="1415.51" height="1131.83" viewBox="-33 32.245 1415.51 1131.83" font-family="Arial, Helvetica, sans-serif" font-size="18">
+<rect x="-33" y="32.245" width="1415.51" height="1131.83" fill="#FFFFFF"/>
+<ellipse cx="270" cy="420" rx="110" ry="40" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="270" y="427" text-anchor="middle">ENUM_ST_SEQ_IDLE</text>
+<ellipse cx="630" cy="310" rx="105" ry="40" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="630" y="317" text-anchor="middle">ENUM_ST_SEQ_KEY</text>
+<ellipse cx="1000" cy="400" rx="120" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1000" y="407" text-anchor="middle">ENUM_ST_SEQ_SU_CFG</text>
+<ellipse cx="1000" cy="880" rx="120" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1000" y="887" text-anchor="middle">ENUM_ST_SEQ_SU_RUN</text>
+<ellipse cx="1000" cy="640" rx="105" ry="40" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1000" y="647" text-anchor="middle">ENUM_ST_SEQ_POW</text>
+<ellipse cx="630" cy="550" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="630" y="557" text-anchor="middle">ENUM_ST_SEQ_REST</text>
+<ellipse cx="1000" cy="1100" rx="105" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1000" y="1107" text-anchor="middle">ENUM_ST_SEQ_AAD</text>
+<ellipse cx="1000" cy="180" rx="120" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1000" y="187" text-anchor="middle">ENUM_ST_SEQ_PY_CFG</text>
+<path d="M 270 280 L 270 282.416 L 270 285.44 L 270 288.984 L 270 292.963 L 270 297.289 L 270 301.875 L 270 306.635 L 270 311.481 L 270 316.328 L 270 321.088 L 270 325.674 L 270 330 L 270 334.326 L 270 338.912 L 270 343.672 L 270 348.519 L 270 353.365 L 270 358.125 L 270 362.711 L 270 367.037 L 270 371.016 L 270 374.56 L 270 377.584 L 270 380" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="270,380 264,368 276,368" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="167" y="301" width="206" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="270" y="322" text-anchor="middle">i_rst_n_core == 1'b0</text>
+<path d="M 1120 400 L 1127.21 398.472 L 1136.85 394.444 L 1148.44 388.75 L 1161.48 382.222 L 1175.5 375.694 L 1190 370 L 1204.5 365.972 L 1218.52 364.444 L 1231.56 366.25 L 1243.15 372.222 L 1252.79 383.194 L 1260 400 L 1265.35 424.722 L 1269.72 457.778 L 1273.12 497.5 L 1275.56 542.222 L 1277.01 590.278 L 1277.5 640 L 1277.01 689.722 L 1275.56 737.778 L 1273.12 782.5 L 1269.72 822.222 L 1265.35 855.278 L 1260 880 L 1252.79 896.806 L 1243.15 907.778 L 1231.56 913.75 L 1218.52 915.556 L 1204.5 914.028 L 1190 910 L 1175.5 904.306 L 1161.48 897.778 L 1148.44 891.25 L 1136.85 885.556 L 1127.21 881.528 L 1120 880" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1120,880 1132.98,876.618 1130.5,888.357" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1196.01" y="504.35" width="156.5" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1274.26" y="525.35" text-anchor="middle">core configured</text>
+<path d="M 895 640 L 887.789 638.536 L 878.148 634.676 L 866.562 629.219 L 853.519 622.963 L 839.502 616.707 L 825 611.25 L 810.498 607.39 L 796.481 605.926 L 783.438 607.656 L 771.852 613.38 L 762.211 623.895 L 755 640 L 749.653 663.692 L 745.278 695.37 L 741.875 733.438 L 739.444 776.296 L 737.986 822.35 L 737.5 870 L 737.986 917.65 L 739.444 963.704 L 741.875 1006.56 L 745.278 1044.63 L 749.653 1076.31 L 755 1100 L 762.211 1116.11 L 771.852 1126.62 L 783.438 1132.34 L 796.481 1134.07 L 810.498 1132.61 L 825 1128.75 L 839.502 1123.29 L 853.519 1117.04 L 866.562 1110.78 L 878.148 1105.32 L 887.789 1101.46 L 895 1100" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="895,1100 884.434,1108.27 882.046,1096.51" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="674.1" y="856" width="126.8" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="737.5" y="877" text-anchor="middle">powers ready</text>
+<path d="M 735 310 L 739.12 310.414 L 744.63 311.505 L 751.25 313.047 L 758.704 314.815 L 766.713 316.583 L 775 318.125 L 783.287 319.216 L 791.296 319.63 L 798.75 319.141 L 805.37 317.523 L 810.88 314.552 L 815 310 L 817.594 303.304 L 818.877 294.352 L 819.102 283.594 L 818.519 271.481 L 817.38 258.466 L 815.938 245 L 814.443 231.534 L 813.148 218.519 L 812.305 206.406 L 812.164 195.648 L 812.979 186.696 L 815 180 L 818.348 175.448 L 822.824 172.477 L 828.203 170.859 L 834.259 170.37 L 840.767 170.784 L 847.5 171.875 L 854.233 173.417 L 860.741 175.185 L 866.797 176.953 L 872.176 178.495 L 876.652 179.586 L 880 180" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="880,180 867.355,184.483 868.827,172.573" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="702.483" y="62.245" width="186.2" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="795.583" y="83.245" text-anchor="middle">key ready no setup</text>
+<path d="M 270 460 L 268.854 461.288 L 265.833 463.009 L 261.562 465.078 L 256.667 467.407 L 251.771 469.91 L 247.5 472.5 L 244.479 475.09 L 243.333 477.593 L 244.688 479.922 L 249.167 481.991 L 257.396 483.712 L 270 485 L 288.542 485.732 L 313.333 485.926 L 343.125 485.703 L 376.667 485.185 L 412.708 484.494 L 450 483.75 L 487.292 483.076 L 523.333 482.593 L 556.875 482.422 L 586.667 482.685 L 611.458 483.504 L 630 485 L 642.604 487.318 L 650.833 490.417 L 655.312 494.141 L 656.667 498.333 L 655.521 502.839 L 652.5 507.5 L 648.229 512.161 L 643.333 516.667 L 638.438 520.859 L 634.167 524.583 L 631.146 527.682 L 630 530" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="630,530 629.94,516.584 640.697,521.902" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="422.697" y="469.634" width="67.4" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="456.397" y="490.634" text-anchor="middle">resume</text>
+<path d="M 740 550 L 753.391 549.841 L 771.296 549.421 L 792.812 548.828 L 817.037 548.148 L 843.067 547.468 L 870 546.875 L 896.933 546.455 L 922.963 546.296 L 947.188 546.484 L 968.704 547.106 L 986.609 548.249 L 1000 550 L 1009.1 552.575 L 1015.05 556.019 L 1018.28 560.156 L 1019.26 564.815 L 1018.43 569.821 L 1016.25 575 L 1013.17 580.179 L 1009.63 585.185 L 1006.09 589.844 L 1003.01 593.981 L 1000.83 597.425 L 1000 600" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1000,600 997.959,586.74 1009.38,590.411" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="820.35" y="532.415" width="166.4" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="903.55" y="553.415" text-anchor="middle">context restored</text>
+<path d="M 630 350 L 629.204 352.575 L 627.106 356.019 L 624.141 360.156 L 620.741 364.815 L 617.341 369.821 L 614.375 375 L 612.277 380.179 L 611.481 385.185 L 612.422 389.844 L 615.532 393.981 L 621.247 397.425 L 630 400 L 642.876 401.751 L 660.093 402.894 L 680.781 403.516 L 704.074 403.704 L 729.103 403.545 L 755 403.125 L 780.897 402.532 L 805.926 401.852 L 829.219 401.172 L 849.907 400.579 L 867.124 400.159 L 880 400" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="880,400 868.075,406.148 867.927,394.149" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="653.595" y="389.59" width="136.7" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="721.945" y="410.59" text-anchor="middle">key ready GCM</text>
+<path d="M 354.216 394.267 L 358.341 391.006 L 363.413 386.628 L 369.317 381.361 L 375.939 375.431 L 383.162 369.062 L 390.873 362.48 L 398.956 355.912 L 407.296 349.584 L 415.778 343.72 L 424.287 338.547 L 432.708 334.29 L 440.926 331.175 L 449.481 329.164 L 458.844 327.988 L 468.791 327.521 L 479.102 327.643 L 489.555 328.229 L 499.928 329.158 L 510.001 330.306 L 519.551 331.549 L 528.356 332.766 L 536.196 333.833 L 542.848 334.628 L 548.092 335.027" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="548.092,335.027 535.671,340.099 536.582,328.134" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="387.052" y="336.645" width="116.9" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="445.502" y="357.645" text-anchor="middle">new message</text>
+<path d="M 1000 860 L 1000 855.104 L 1000 848.889 L 1000 841.562 L 1000 833.333 L 1000 824.41 L 1000 815 L 1000 805.312 L 1000 795.556 L 1000 785.938 L 1000 776.667 L 1000 767.951 L 1000 760 L 1000 752.378 L 1000 744.583 L 1000 736.719 L 1000 728.889 L 1000 721.198 L 1000 713.75 L 1000 706.649 L 1000 700 L 1000 693.906 L 1000 688.472 L 1000 683.802 L 1000 680" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1000,680 1006,692 994,692" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="931.65" y="756" width="136.7" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1000" y="777" text-anchor="middle">setup results</text>
+<path d="M 204 388 L 194.523 387.796 L 181.852 387.259 L 166.625 386.5 L 149.481 385.63 L 131.06 384.759 L 112 384 L 92.9398 383.463 L 74.5185 383.259 L 57.375 383.5 L 42.1481 384.296 L 29.4769 385.759 L 20 388 L 12.9722 391.296 L 7.22222 395.704 L 2.75 401 L -0.444444 406.963 L -2.36111 413.37 L -3 420 L -2.36111 426.63 L -0.444444 433.037 L 2.75 439 L 7.22222 444.296 L 12.9722 448.704 L 20 452 L 29.4769 454.241 L 42.1481 455.704 L 57.375 456.5 L 74.5185 456.741 L 92.9398 456.537 L 112 456 L 131.06 455.241 L 149.481 454.37 L 166.625 453.5 L 181.852 452.741 L 194.523 452.204 L 204 452" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="204,452 192.132,458.256 191.874,446.259" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 567 278 L 566.599 270.377 L 565.542 260.185 L 564.047 247.938 L 562.333 234.148 L 560.62 219.331 L 559.125 204 L 558.068 188.669 L 557.667 173.852 L 558.141 160.062 L 559.708 147.815 L 562.589 137.623 L 567 130 L 573.49 124.347 L 582.167 119.722 L 592.594 116.125 L 604.333 113.556 L 616.948 112.014 L 630 111.5 L 643.052 112.014 L 655.667 113.556 L 667.406 116.125 L 677.833 119.722 L 686.51 124.347 L 693 130 L 697.411 137.623 L 700.292 147.815 L 701.859 160.062 L 702.333 173.852 L 701.932 188.669 L 700.875 204 L 699.38 219.331 L 697.667 234.148 L 695.953 247.938 L 694.458 260.185 L 693.401 270.377 L 693 278" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="693,278 687.639,265.701 699.622,266.332" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 928 384 L 927.542 376.583 L 926.333 366.667 L 924.625 354.75 L 922.667 341.333 L 920.708 326.917 L 919 312 L 917.792 297.083 L 917.333 282.667 L 917.875 269.25 L 919.667 257.333 L 922.958 247.417 L 928 240 L 935.417 234.5 L 945.333 230 L 957.25 226.5 L 970.667 224 L 985.083 222.5 L 1000 222 L 1014.92 222.5 L 1029.33 224 L 1042.75 226.5 L 1054.67 230 L 1064.58 234.5 L 1072 240 L 1077.04 247.417 L 1080.33 257.333 L 1082.12 269.25 L 1082.67 282.667 L 1082.21 297.083 L 1081 312 L 1079.29 326.917 L 1077.33 341.333 L 1075.38 354.75 L 1073.67 366.667 L 1072.46 376.583 L 1072 384" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1072,384 1066.75,371.653 1078.73,372.393" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 928 896 L 927.542 903.417 L 926.333 913.333 L 924.625 925.25 L 922.667 938.667 L 920.708 953.083 L 919 968 L 917.792 982.917 L 917.333 997.333 L 917.875 1010.75 L 919.667 1022.67 L 922.958 1032.58 L 928 1040 L 935.417 1045.5 L 945.333 1050 L 957.25 1053.5 L 970.667 1056 L 985.083 1057.5 L 1000 1058 L 1014.92 1057.5 L 1029.33 1056 L 1042.75 1053.5 L 1054.67 1050 L 1064.58 1045.5 L 1072 1040 L 1077.04 1032.58 L 1080.33 1022.67 L 1082.12 1010.75 L 1082.67 997.333 L 1082.21 982.917 L 1081 968 L 1079.29 953.083 L 1077.33 938.667 L 1075.38 925.25 L 1073.67 913.333 L 1072.46 903.417 L 1072 896" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1072,896 1078.73,907.607 1066.75,908.347" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 1063 608 L 1072.37 607.796 L 1084.91 607.259 L 1099.97 606.5 L 1116.93 605.63 L 1135.15 604.759 L 1154 604 L 1172.85 603.463 L 1191.07 603.259 L 1208.03 603.5 L 1223.09 604.296 L 1235.63 605.759 L 1245 608 L 1251.95 611.296 L 1257.64 615.704 L 1262.06 621 L 1265.22 626.963 L 1267.12 633.37 L 1267.75 640 L 1267.12 646.63 L 1265.22 653.037 L 1262.06 659 L 1257.64 664.296 L 1251.95 668.704 L 1245 672 L 1235.63 674.241 L 1223.09 675.704 L 1208.03 676.5 L 1191.07 676.741 L 1172.85 676.537 L 1154 676 L 1135.15 675.241 L 1116.93 674.37 L 1099.97 673.5 L 1084.91 672.741 L 1072.37 672.204 L 1063 672" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1063,672 1075.13,666.262 1074.87,678.259" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 564 534 L 554.523 533.898 L 541.852 533.63 L 526.625 533.25 L 509.481 532.815 L 491.06 532.38 L 472 532 L 452.94 531.731 L 434.519 531.63 L 417.375 531.75 L 402.148 532.148 L 389.477 532.88 L 380 534 L 372.972 535.648 L 367.222 537.852 L 362.75 540.5 L 359.556 543.481 L 357.639 546.685 L 357 550 L 357.639 553.315 L 359.556 556.519 L 362.75 559.5 L 367.222 562.148 L 372.972 564.352 L 380 566 L 389.477 567.12 L 402.148 567.852 L 417.375 568.25 L 434.519 568.37 L 452.94 568.269 L 472 568 L 491.06 567.62 L 509.481 567.185 L 526.625 566.75 L 541.852 566.37 L 554.523 566.102 L 564 566" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="564,566 552.065,572.129 551.936,560.129" fill="#000000" stroke="#000000" stroke-width="1"/>
+</svg>
+<figcaption>Editable source: <a href="aesgcm_fsm_seq_setup.drawio">message sequencer, setup view.drawio</a> | <a href="aesgcm_fsm_seq_setup.json">message sequencer, setup view.json</a></figcaption></figure>
+  <section><h2>Transition and Global State Control Mapping</h2><table><thead><tr><th>Kind</th><th>Label / effect</th><th>Boolean expression</th></tr></thead><tbody>
+    <tr><td>Transition</td><td>context restored</td><td><code>w_ctx_done</code></td></tr>
+    <tr><td>Transition</td><td>core configured</td><td><code>i_core_cfg_valid &amp;&amp; o_core_cfg_ready</code></td></tr>
+    <tr><td>Transition</td><td>key ready GCM</td><td><code>w_key_ready &amp;&amp; w_mode_gcm &amp;&amp; (w_pass == 2&#x27;d0 || w_pass == 2&#x27;d1)</code></td></tr>
+    <tr><td>Transition</td><td>key ready no setup</td><td><code>w_key_ready &amp;&amp; (!w_mode_gcm || w_pass == 2&#x27;d2)</code></td></tr>
+    <tr><td>Transition</td><td>new message</td><td><code>w_bundle_valid &amp;&amp; !w_cmd_resume &amp;&amp; w_cfg_legal</code></td></tr>
+    <tr><td>Transition</td><td>powers ready</td><td><code>w_pow_done</code></td></tr>
+    <tr><td>Transition</td><td>resume</td><td><code>w_cmd_resume &amp;&amp; w_slot_valid</code></td></tr>
+    <tr><td>Transition</td><td>setup results</td><td><code>w_h_captured &amp;&amp; w_ej0_captured</code></td></tr>
+  </tbody></table></section>
+</body>
+</html>

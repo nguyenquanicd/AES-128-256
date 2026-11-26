@@ -2,7 +2,7 @@
 
 ## English
 
-Draft design specification (version 0.1) of an APB/AXI4/DMA accelerator that adds AES-GCM and GMAC to the `ht_aes128_256` core, with the build parameter `PARA_AES_GCM_EN` to enable or disable GCM. No RTL exists yet.
+Draft design specification (version 0.1) of an APB/AXI4/DMA accelerator that adds AES-GCM and GMAC to the `ht_aes128_256` core, with the build parameter `PARA_AES_GCM_EN` to enable or disable GCM. The RTL is in [`rtl/ht_aes_gcm_acc`](../../rtl/ht_aes_gcm_acc/README.md); the original specification before the RTL is the git tag `aes-gcm-hds-v0.1`.
 
 | File | Content |
 |---|---|
@@ -15,7 +15,7 @@ The GCM statements cite NIST SP 800-38D (November 2007), converted to Markdown i
 
 ## Tiếng Việt
 
-Bản nháp đặc tả (phiên bản 0.1) của bộ tăng tốc APB/AXI4/DMA bổ sung AES-GCM và GMAC cho core `ht_aes128_256`, có tham số build `PARA_AES_GCM_EN` để bật hoặc tắt GCM. Chưa có RTL.
+Bản nháp đặc tả (phiên bản 0.1) của bộ tăng tốc APB/AXI4/DMA bổ sung AES-GCM và GMAC cho core `ht_aes128_256`, có tham số build `PARA_AES_GCM_EN` để bật hoặc tắt GCM. RTL nằm ở [`rtl/ht_aes_gcm_acc`](../../rtl/ht_aes_gcm_acc/README.md); bản đặc tả gốc trước RTL là git tag `aes-gcm-hds-v0.1`.
 
 | Tệp | Nội dung |
 |---|---|

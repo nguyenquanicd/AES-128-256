@@ -108,7 +108,29 @@
     }
   ],
   "layout": {
-    "margin": 160
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_CTX_IDLE": [
+        1700,
+        480
+      ],
+      "ENUM_ST_CTX_DEC": [
+        740,
+        480
+      ],
+      "ENUM_ST_CTX_MOVE": [
+        1220,
+        480
+      ],
+      "ENUM_ST_CTX_XFER": [
+        260,
+        480
+      ],
+      "ENUM_ST_CTX_DONE": [
+        740,
+        200
+      ]
+    }
   },
   "global_overrides": [
     {
