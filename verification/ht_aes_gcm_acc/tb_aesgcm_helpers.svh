@@ -142,6 +142,10 @@ endtask
 // Resume slot ctx with the configuration of the current record (S09).
 task automatic do_resume(input int ctx, input int path, input int gpass);
   apb_wr(A_CFG, cfg_word(m_mode, m_dec, m_ksz, 0, path_dsrc(path), gpass, m_seg, m_tlc, ctx));
+  // The key is not part of the exported image (REQ-SEC-004): in export mode software supplies it
+  // again through the key registers before the resume.
+  if (C_CTX_MODE == 1)
+    for (int k = 0; k < ((m_ksz == 1) ? 8 : 4); k++) apb_wr(A_KEY + 4 * k, m_key[k]);
   clear_events();
   sh_msg_active = 1'b1;
   cmd(CTRL_RESUME);

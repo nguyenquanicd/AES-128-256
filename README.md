@@ -11,7 +11,7 @@ This repository contains four AES RTL implementations. Each implementation has i
 | High-throughput AES-128/AES-256 | `rtl/ht_aes128_256/` | Pipelined batch core with run-time AES-128/AES-256 selection | [AES-128/AES-256 specification](doc/ht_aes128_256/AES128_AES256_ECB_CBC_CFB_OFB_CTR_Design_Specification.md) | [Dual-key verification](verification/ht_aes128_256/README.md) |
 | AES-GCM accelerator | `rtl/ht_aes_gcm_acc/` | APB4 / AXI4 / DMA accelerator that wraps the dual-key core and adds AES-GCM and GMAC, enabled by `PARA_AES_GCM_EN` (all six legacy modes stay available) | [AES-GCM specification](doc/ht_aes_gcm_acc/VLSIT_AES_GCM_ACCELERATOR_HDS.md), [RTL notes](rtl/ht_aes_gcm_acc/README.md) | [AES-GCM verification](verification/ht_aes_gcm_acc/README.md) |
 
-The AES-GCM accelerator is on the branch `feature/aes-gcm-acc`. Its status: specification check PASS; RTL rule check and Verilator lint PASS, scratch simulations against an independent GCM model PASS; the specification-based testbench (107 assertions, plan, fault plan) is written but **has not been built or run yet**, so there are no regression, coverage, CDC or synthesis results for it.
+The AES-GCM accelerator is on the branch `feature/aes-gcm-acc`. Its status: specification check PASS; RTL rule check and Verilator lint PASS; the specification-based testbench (107 assertions plus the functional testcases and waveform scenarios) passes in the builds LINK, MIN, LEGACY, EXPORT, FULL, AXI 128-bit with one lane, synchronous clocks (ratios 1:1, 3:2, 4:1, 1:4) and, with the metastability model, FULL with three seeds, with 0 failed checks, 0 assertion failures and no assertion left unexercised; the first run exposed defects in the design and in the specification, recorded as decisions DEC-025 to DEC-039 (specification section 20). Not done yet: the fault-detection run (mutants), the review of the waveforms against the specification figures, coverage closure and the engineer review (all PENDING in `verification/ht_aes_gcm_acc`). Details: [verification README](verification/ht_aes_gcm_acc/README.md).
 
 ### AES-GCM accelerator top level
 
@@ -69,7 +69,7 @@ verification/
   single_aes128/       Legacy core tests, formal harnesses and simulation scripts
   ht_aes128/           Batch testbench, vectors, logs and waveform evidence
   ht_aes128_256/       Dual-key testbench, vectors, logs, waveforms and synthesis
-  ht_aes_gcm_acc/      AES-GCM testbench, vectors, test and fault plans (not run yet)
+  ht_aes_gcm_acc/      AES-GCM testbench, vectors, test and fault plans (regression results in its README)
   shared/              Independent AES reference model used by the flows
   legacy_uart_apb/     Preserved UART/APB files unrelated to the AES designs
 Makefile              Main entry point for the AES-128 flows
@@ -102,7 +102,7 @@ Repository này có bốn cách cài đặt AES RTL. Mỗi design có RTL, đặ
 | AES-128/AES-256 throughput cao | `rtl/ht_aes128_256/` | Batch core pipeline, chọn AES-128 hoặc AES-256 khi chạy | [Đặc tả AES-128/AES-256](doc/ht_aes128_256/AES128_AES256_ECB_CBC_CFB_OFB_CTR_Design_Specification.md) | [Verification hai kích thước khóa](verification/ht_aes128_256/README.md) |
 | Bộ tăng tốc AES-GCM | `rtl/ht_aes_gcm_acc/` | Bộ tăng tốc APB4 / AXI4 / DMA bao core hai key size, thêm AES-GCM và GMAC, bật bằng `PARA_AES_GCM_EN` (sáu mode cũ vẫn dùng được) | [Đặc tả AES-GCM](doc/ht_aes_gcm_acc/VLSIT_AES_GCM_ACCELERATOR_HDS.md), [Ghi chú RTL](rtl/ht_aes_gcm_acc/README.md) | [Verification AES-GCM](verification/ht_aes_gcm_acc/README.md) |
 
-Bộ tăng tốc AES-GCM nằm trên nhánh `feature/aes-gcm-acc`. Trạng thái: kiểm tra đặc tả PASS; rule check RTL và lint Verilator PASS, mô phỏng scratch với mô hình GCM độc lập PASS; testbench theo đặc tả (107 assertion, kế hoạch test và fault) đã viết nhưng **chưa build và chưa chạy**, nên chưa có kết quả regression, coverage, CDC hay synthesis.
+Bộ tăng tốc AES-GCM nằm trên nhánh `feature/aes-gcm-acc`. Trạng thái: kiểm tra đặc tả PASS; rule check RTL và lint Verilator PASS; testbench theo đặc tả (107 assertion cùng các testcase chức năng và kịch bản waveform) PASS ở các bản build LINK, MIN, LEGACY, EXPORT, FULL, AXI 128 bit một lane, clock đồng bộ (tỷ lệ 1:1, 3:2, 4:1, 1:4) và, với mô hình metastable, FULL ba seed, với 0 check lỗi, 0 assertion fail và không còn assertion nào chưa được kích hoạt; lần chạy đầu làm lộ các lỗi của thiết kế và của đặc tả, được ghi thành các quyết định DEC-025 đến DEC-039 (mục 20 của đặc tả). Chưa làm: chạy phát hiện lỗi giả (mutant), đối chiếu waveform với hình trong đặc tả, đóng coverage và duyệt của kỹ sư (đều PENDING trong `verification/ht_aes_gcm_acc`). Chi tiết: [README verification](verification/ht_aes_gcm_acc/README.md).
 
 ### Top level của bộ tăng tốc AES-GCM
 
@@ -160,7 +160,7 @@ verification/
   single_aes128/       Test, formal harness và script mô phỏng core cũ
   ht_aes128/           Testbench batch, vector, log và waveform
   ht_aes128_256/       Testbench hai key size, vector, log, waveform và synthesis
-  ht_aes_gcm_acc/      Testbench AES-GCM, vector, kế hoạch test và fault (chưa chạy)
+  ht_aes_gcm_acc/      Testbench AES-GCM, vector, kế hoạch test và fault (kết quả regression trong README của nó)
   shared/              Mô hình AES tham chiếu độc lập dùng chung
   legacy_uart_apb/     Tệp UART/APB cũ, không thuộc các AES design
 Makefile              Điểm chạy chính cho các flow AES-128

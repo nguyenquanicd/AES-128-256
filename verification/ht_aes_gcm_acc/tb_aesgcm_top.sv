@@ -216,6 +216,8 @@ module tb_aesgcm_top;
     .AW       (C_AW),
     .AXI_EN   (C_AXI),
     .KEY_SIDE (C_KEY_SIDE),
+    .POLICY   (C_POLICY),
+    .GCM_EN   (C_GCM_EN),
     .PROBES   (C_PROBES)
   ) u_chk (
     .clk_bus         (clk_bus),

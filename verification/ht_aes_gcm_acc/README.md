@@ -123,6 +123,33 @@ checker message; `PC_LEGAL` (no define) must pass.
   The sources in this folder are not modified for that.
 - Run the generated binary from this folder. A complete CFG-FULL run takes about 19 minutes.
 
+## Regression results (2026-11-27, seed 1, Verilator 5.053, RTL of DEC-001 to DEC-039)
+
+Every run is `+TEST=ALL`; a run exits with 0 only when no test fails, no assertion fails and no
+applicable assertion is left unexercised (R-025). `SKIP` is a test that does not apply to the build.
+
+| Build | Defines | PASS | FAIL | SKIP | Assertion failures | Never exercised |
+|---|---|---|---|---|---|---|
+| FULL (synthesis branch) | none | 49 | 0 | 5 | 0 | 0 |
+| FULL, metastability model, seeds 1, 2, 3 | filelist without `VLSIT_SYNTHESIS`, `+AFIFO_MSYNC_SEED=n` | 49 each | 0 | 5 | 0 | 0 |
+| LINK (APB wrapper) | `TB_CFG_LINK` | 33 | 0 | 21 | 0 | 0 |
+| MIN | `TB_CFG_MIN` | 32 | 0 | 22 | 0 | 0 |
+| LEGACY (no GCM) | `TB_CFG_LEGACY` | 10 | 0 | 44 | 0 | 0 |
+| EXPORT (context export) | `TB_CFG_EXPORT` | 50 | 0 | 4 | 0 | 0 |
+| AXI 128-bit, one lane | `TB_AXI_DATA_W=128 TB_AES_LANE_NUM=1` | 46 | 0 | 8 | 0 | 0 |
+| Synchronous clocks 1:4 | `TB_CLK_ASYNC=0 +CLK_RATIO=1_4` | 49 | 0 | 5 | 0 | 0 |
+| Synchronous clocks 3:2 | `TB_CLK_ASYNC=0 +CLK_RATIO=3_2` | 50 | 0 | 4 | 0 | 0 |
+| TC-14 alone, ratios 1:1, 3:2, 4:1, 1:4, and WF-016 at 3:2 | `TB_CLK_ASYNC=0` | all PASS | 0 | 0 | 0 | not a full run |
+
+`vlsit_sim_evidence.py cdc` (R-034) passes on the logs of the synthesis branch and of the three
+metastability seeds. The simulations ran on a copy of this folder in which `/*verilator no_inline_task*/`
+follows every task header (see Build notes); the committed sources are unchanged.
+
+Not done yet: the waveform evidence of R-033 (dumps, WaveJSON and comparison with the specification
+figure for every WF scenario: `vlsit_sim_evidence.py check` reports the missing files), the fault
+detection run of `fault_plan.md` (R-096), coverage closure, the probe-based assertions (probes not
+bound) and the engineer review (`review_ledger.md`, PENDING).
+
 ## Assertion classes
 
 An assertion failure counts in `assertion failures`. APB-17 (PSLVERR low outside the last cycle of a

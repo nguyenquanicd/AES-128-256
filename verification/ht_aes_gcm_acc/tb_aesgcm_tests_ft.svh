@@ -48,21 +48,24 @@ task automatic ft011();
   sh_msg_active = 1'b0;
   tc_check("FT011-C3", first_ok && ok && ev && (cmp_out(48, 48, 48, beat, 1'b0) == 0) &&
            tag_full_ok(), "export, import and resume give the uninterrupted output and tag");
+  // The secure-only pin is static: set it while no message is active, then suspend (export) and
+  // resume (import) with the pin at 1 (REQ-FUNC-011).
+  set_pin(1'b1);
   start_only(path, 0, 1'b0, 0);
   build_tx(0, 32, 0, 0, beat);
   move_part(path, 0, 0, ok);
   repeat (300) @(posedge clk_bus);
+  clear_events();
   do_suspend(ev, ca, cd);
   sh_msg_active = 1'b0;
-  set_pin(1'b1);
-  clear_events();
-  apb_rd(A_CTXX, v);
-  wait_event(10'h1 << EV_CERR, 60, seen);
-  tc_check("FT011-C4", seen, "export with i_gcm_secure_only = 1: CFG_ERR");
+  read_results();
+  seen = raw(EV_CERR);
+  tc_check("FT011-C4", seen, "export (suspend) with i_gcm_secure_only = 1: CFG_ERR");
   clear_events();
   apb_wr(A_CTXX, 32'h1234_5678);
+  do_resume(0, path, 0);
   wait_event(10'h1 << EV_CERR, 60, seen);
-  tc_check("FT011-C5", seen, "import with i_gcm_secure_only = 1: CFG_ERR");
+  tc_check("FT011-C5", seen, "import (resume) with i_gcm_secure_only = 1: CFG_ERR");
   set_pin(1'b0);
   cmd(CTRL_ZEROIZE);
   apb_poll(A_STS, 32'h8, 32'h8, 200, v, ok);
@@ -163,6 +166,8 @@ task automatic ft014();
   sw_enable((10'h1 << EV_DONE) | EV_ERRS);
   load_msg(0);
   if (C_KEY_SIDE == 0) begin
+    // REQ-FUNC-015 applies to every configuration: without GCM the message is a legacy ECB one.
+    if (C_GCM_EN == 0) begin m_mode = 0; m_dec = 0; m_aadlen = 0; m_dlen = 16; end
     sw_program(0, 1, path_dsrc(path), -1, 1'b0, (C_GCM_EN == 1), 0);
     clear_events(); sw_start();
     wait_event(10'h1 << EV_KERR, 400, ev);
@@ -410,6 +415,7 @@ task automatic ft026();
   load_msg(1);
   start_only(path, 0, 1'b1, 0);
   apb_poll(A_STS, 32'h1, 32'h1, 100, v, ok);
+  apb_poll(A_CTRL, CTRL_START, 32'h0, 200, v, ok);   // S07: the start bit is cleared when accepted
   clear_events();
   cmd(CTRL_START);
   wait_event(10'h1 << EV_PERR, 100, seen);
@@ -708,8 +714,11 @@ task automatic ft038();
   fork
     axi_write_burst(4'h1, AXI_RD_WIN, 1, AXI_SIZE_FULL, BURST_INCR, 0, 1'b0, br1, bid1, ok1);
     begin
+      // Raise the second address at the clock of the last write beat of burst 1: the window is then
+      // in its response state, whatever the BREADY delay of the master.
       n = 0;
-      while ((o_axi_bvalid !== 1'b1) && (n < 5000)) begin @(posedge clk_bus); n++; end
+      while (!((o_axi_wready === 1'b1) && (axi_wvalid === 1'b1) && (axi_wlast === 1'b1)) &&
+             (n < 5000)) begin @(posedge clk_bus); n++; end
       axi_awid <= 4'h2; axi_awaddr <= AXI_RD_WIN; axi_awlen <= 8'd0; axi_awsize <= AXI_SIZE_FULL;
       axi_awburst <= BURST_INCR; axi_awvalid <= 1'b1;
       n = 0;

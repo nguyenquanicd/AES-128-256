@@ -26,6 +26,8 @@ module tb_aesgcm_assert #(
   parameter int AW         = 16,
   parameter int AXI_EN     = 1,
   parameter int KEY_SIDE   = 1,
+  parameter int POLICY     = 2,
+  parameter int GCM_EN     = 1,
   parameter bit PROBES     = 1'b0
 ) (
   input  logic            clk_bus,
@@ -295,6 +297,14 @@ module tb_aesgcm_assert #(
         why[i] = "PARA_KEY_SIDE_EN = 0: no side-load capture (REQ-FUNC-015); KS-04 still checks no ack";
       end
       na[KS05] = 1'b1; why[KS05] = "PARA_KEY_SIDE_EN = 0 (REQ-FUNC-015)";
+    end
+    // Policy C does not exist with PARA_GCM_REL_POLICY = 0, policy A pass 1 does not exist with
+    // PARA_GCM_REL_POLICY = 1, and neither exists without GCM (REQ-SEC-002, REQ-SEC-003).
+    if ((POLICY == 0) || (GCM_EN == 0)) begin
+      na[POL04] = 1'b1; why[POL04] = "policy C is not built (PARA_GCM_REL_POLICY = 0 or no GCM)";
+    end
+    if ((POLICY == 1) || (GCM_EN == 0)) begin
+      na[POL01] = 1'b1; why[POL01] = "policy A pass 1 is not built (PARA_GCM_REL_POLICY = 1 or no GCM)";
     end
     if (!PROBES) begin
       na[INT01] = 1'b1; why[INT01] = "probes not bound (probe_list.md, define TB_PROBES_BOUND)";
