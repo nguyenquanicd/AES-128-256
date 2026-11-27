@@ -7,17 +7,18 @@
 // =================================================================================================
 // TC-09  AXI4 window robustness inside a live GCM message
 //   Priority     : P1
-//   Objective    : illegal bursts (WRAP, reserved type, wrong AxSIZE, wrong window, early WLAST) to
+//   Objective    : illegal bursts (WRAP, reserved type, wrong AxSIZE, wrong window) to
 //                  both windows are answered with SLVERR, consumed completely and leave the FIFOs
 //                  unchanged, while legal FIXED/INCR bursts (up to 256 beats) of the same message
-//                  produce the model output and tag; IDs are echoed; no interrupt event is raised.
-//   Requirements : REQ-IF-002, REQ-IF-003, ERR-008, 6.3.2; IHI0022H A3.2, A3.4.1, Table A3-5, A5.2;
+//                  produce the model output and tag; IDs are echoed; no interrupt event is raised. A separate
+//                  message checks the early-WLAST burst (SLVERR, abort recovers; DEC-029, ERR-010).
+//   Requirements : REQ-IF-002, REQ-IF-003, ERR-008, ERR-010, 6.3.2; IHI0022H A3.2, A3.4.1, Table A3-5, A5.2;
 //                  TEST-017, TEST-031
 //   Config/state : AXI wrapper; reset; BREADY/RREADY back-pressure by seed.
 //   SW sequence  : S04/S05 AES-256 GCM encrypt aad 40, len 2048, dat_src 0; S07; AXI traffic below;
 //                  S10; S11.
 //   Stimulus     : legal INCR AAD burst; WRAP/len 4, reserved/len 2, INCR with size-1, INCR to the
-//                  read window, early WLAST; illegal reads WRAP, wrong size, write window; then the
+//                  read window; illegal reads WRAP, wrong size, write window; then the
 //                  payload in INCR bursts of up to 256 beats with FIXED/INCR reads in parallel.
 //   Failure mode : illegal data pushed or popped, response wrong, ID lost, deadlock, PROTO_ERR.
 //   Method       : AXI-* assertions (AXI-16, AXI-21, AXI-14, AXI-18, AXI-19), model compare.
@@ -32,6 +33,7 @@
 // =================================================================================================
 task automatic tc09();
   bit ok, okw, okr, ev, all1, all2, all3, zd;
+  logic [31:0] v;
   logic [1:0] br, rr;
   logic [C_IW-1:0] bi, id;
   int beat, aad_beats, pay_beats, junk, done_b, len;
@@ -64,9 +66,7 @@ task automatic tc09();
   if (!(ok && (br == 2'b10) && (bi == 4'h7))) all1 = 1'b0;
   axi_write_burst(4'h8, AXI_RD_WIN, 1, AXI_SIZE_FULL, BURST_INCR, junk, 1'b0, br, bi, ok);
   if (!(ok && (br == 2'b10) && (bi == 4'h8))) all1 = 1'b0;
-  axi_write_burst(4'h9, AXI_WR_WIN, 3, AXI_SIZE_FULL, BURST_INCR, junk, 1'b1, br, bi, ok);
-  if (!(ok && (br == 2'b10) && (bi == 4'h9))) all1 = 1'b0;
-  tc_check("TC09-C1", all1, "WRAP, reserved, wrong size, read-window and early-WLAST writes: SLVERR");
+  tc_check("TC09-C1", all1, "WRAP, reserved, wrong size and read-window writes: SLVERR");
   // illegal reads
   axi_read_burst(4'hA, AXI_RD_WIN, 3, AXI_SIZE_FULL, BURST_WRAP, 0, 1'b0, 2000, rr, zd, ok);
   if (!(ok && (rr == 2'b10) && zd)) all2 = 1'b0;
@@ -102,6 +102,18 @@ task automatic tc09();
   tc_check("TC09-C5", tag_full_ok(), "tag = model");
   tc_check("TC09-C6", !raw(EV_PERR) && !raw(EV_LERR) && raw(EV_DONE),
            "no PROTO_ERR or LEN_ERR from bus responses (ERR-008: bus response only)");
+  // Early WLAST (DEC-029, ERR-010): SLVERR, the beats already accepted stay in the stream, so the
+  // message is ended with abort.
+  clear_events();
+  load_msg(0);
+  start_only(PATH_AXI_INCR, 0, 1'b1, 0);
+  axi_write_burst(4'h9, AXI_WR_WIN, 3, AXI_SIZE_FULL, BURST_INCR, junk, 1'b1, br, bi, ok);
+  tc_check("TC09-C7", ok && (br == 2'b10) && (bi == 4'h9),
+           "write burst with an early WLAST: SLVERR after the last beat, BID echoed (ERR-010)");
+  cmd(CTRL_ABORT);
+  apb_poll(A_CTRL, CTRL_ABORT, 32'h0, 400, v, ok);
+  sh_msg_active = 1'b0;
+  tc_check("TC09-C8", ok, "abort accepted after the early-WLAST burst");
   tc_end();
 endtask
 

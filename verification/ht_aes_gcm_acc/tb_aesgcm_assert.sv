@@ -151,12 +151,23 @@ module tb_aesgcm_assert #(
   bit    na  [0:NA-1];
   string why [0:NA-1];
 
+  // A rule that the standard only recommends (IHI0024D 3.4: PSLVERR low outside the last cycle) is
+  // counted as a recommendation violation (rec_cnt) and is not an assertion failure (decision of
+  // 2026-11-27, the standard says "recommended, but not required").
+  bit rec_rule [0:NA-1];
+  int rec_cnt  [0:NA-1];
+
   task automatic chk(input int id, input logic ante, input logic cons);
     if (ante === 1'b1) begin
       hit[id] = hit[id] + 1;
       if (cons !== 1'b1) begin
-        bad[id] = bad[id] + 1;
-        if (bad[id] <= 5) $display("ASSERT FAIL @%0t: %0s", $time, nm[id]);
+        if (rec_rule[id]) begin
+          rec_cnt[id] = rec_cnt[id] + 1;
+          if (rec_cnt[id] <= 5) $display("ASSERT RECOMMENDED @%0t: %0s", $time, nm[id]);
+        end else begin
+          bad[id] = bad[id] + 1;
+          if (bad[id] <= 5) $display("ASSERT FAIL @%0t: %0s", $time, nm[id]);
+        end
       end
     end
   endtask
@@ -179,7 +190,10 @@ module tb_aesgcm_assert #(
   endfunction
 
   initial begin
-    for (int i = 0; i < NA; i++) begin hit[i] = 0; bad[i] = 0; na[i] = 1'b0; why[i] = ""; end
+    for (int i = 0; i < NA; i++) begin
+      hit[i] = 0; bad[i] = 0; na[i] = 1'b0; why[i] = ""; rec_rule[i] = 1'b0; rec_cnt[i] = 0;
+    end
+    rec_rule[APB17] = 1'b1;
     nm[APB01] = "APB-01 PSEL known after reset (IHI0024D A.1)";
     nm[APB02] = "APB-02 PADDR/PWRITE/PENABLE/PPROT/PSTRB known while PSEL (IHI0024D A.1)";
     nm[APB03] = "APB-03 PWDATA known in a write (IHI0024D A.1)";
@@ -687,8 +701,9 @@ module tb_aesgcm_assert #(
       if (na[i]) begin
         $display("  %-6s %8s %6s  %0s", "N/A", "-", "-", nm[i]);
       end else begin
-        $display("  %-6s %8d %6d  %0s", (bad[i] != 0) ? "FAIL" : ((hit[i] == 0) ? "NEVER" : "ok"),
-                 hit[i], bad[i], nm[i]);
+        $display("  %-6s %8d %6d  %0s%0s", (bad[i] != 0) ? "FAIL" : ((hit[i] == 0) ? "NEVER" :
+                 ((rec_cnt[i] != 0) ? "REC" : "ok")), hit[i], bad[i], nm[i],
+                 rec_rule[i] ? $sformatf("  [recommended rule, %0d violations]", rec_cnt[i]) : "");
         nf = nf + bad[i];
         if (hit[i] == 0) nn = nn + 1;
       end

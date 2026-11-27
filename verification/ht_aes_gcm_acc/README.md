@@ -115,6 +115,20 @@ Parameter legality (TEST-025, TEST-032): one lint run per set of `tb_param_check
 verification/ht_aes_gcm_acc/tb_param_check_top.sv --top-module tb_param_check_top` must stop with the
 checker message; `PC_LEGAL` (no define) must pass.
 
+## Build notes (Windows, Verilator 5.053)
+
+- The testbench tasks are inlined by Verilator into one very large C++ function. To keep the
+  compile within memory, build from a copy of this folder in which every `task` header is followed by
+  `/*verilator no_inline_task*/`, and add `-Wno-IMPURE --output-split 8000 --output-split-cfuncs 800`.
+  The sources in this folder are not modified for that.
+- Run the generated binary from this folder. A complete CFG-FULL run takes about 19 minutes.
+
+## Assertion classes
+
+An assertion failure counts in `assertion failures`. APB-17 (PSLVERR low outside the last cycle of a
+transfer) is a rule that IHI0024D 3.4 only recommends; its violations are listed as `REC` in the
+assertion table and in `ASSERT RECOMMENDED` lines and are not failures (decision of 2026-11-27).
+
 ## Evidence layout
 
 | Folder / file | Content | Owner |

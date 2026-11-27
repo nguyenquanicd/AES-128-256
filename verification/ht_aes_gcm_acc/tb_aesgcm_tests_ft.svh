@@ -279,7 +279,7 @@ task automatic ft016();
     apb_xfer(1'b1, A_DATALEN, 32'hA5A5_5A5A, 4'b0001, 3'b000, rd, err);
     apb_rd(A_DATALEN, v);
     if (slverr_en) begin if (!(err && (v == 32'h0))) a2 = 1'b0; end
-    else begin if (!(!err && (v == 32'hA5A5_5A5A))) a2 = 1'b0; end
+    else begin if (!(!err && (v == 32'h0000_005A))) a2 = 1'b0; end   // PSTRB selects the byte lanes (spec 11.4)
     // unaligned write and read
     apb_wr(A_AADLEN, 32'h0000_1111);
     apb_xfer(1'b1, A_AADLEN + 16'h1, 32'h2222_2222, 4'hF, 3'b000, rd, err);
@@ -624,5 +624,53 @@ task automatic ft036();
   apb_wr(A_DMACFG, 32'h0);
   run_msg(PATH_DMA_AXI, 0, 0, 1'b1, 0, 0);
   tc_check("FT036-C2", run_ok && (r_out_bad == 0), "fitting burst size starts and completes");
+  tc_end();
+endtask
+
+// =================================================================================================
+// FT-037  Pause of the beat stream with N > 1: the written blocks reach the core (DEC-026, TEST-037)
+//   Priority     : P2
+//   Objective    : when the input stream pauses for 16 or more BUS clocks after 40 of 96 payload
+//                  bytes, the two complete blocks (32 bytes) are consumed and their output appears
+//                  although the entry is not full and the segment is not finished; the rest of the
+//                  message then completes with the output and tag of the uninterrupted message.
+//   Requirements : REQ-FUNC-010, DEC-026, TEST-037
+//   Config/state : PARA_AES_GCM_EN = 1, PARA_AES_LANE_NUM > 1, beat of 4 or 8 bytes; reset.
+//   SW sequence  : S04/S05 message of 32 AAD bytes and 96 payload bytes, start; write the AAD and 40
+//                  payload bytes; read 32 output bytes while no further byte is written; then write
+//                  the other 56 bytes and read the other 64 bytes; S10, S11.
+//   Method       : model compare of the whole output and the tag.
+//   Checks       :
+//     FT037-C1 | DEC-026 | pause after 40 bytes | 32 output bytes equal the model | tc_check | bounded read | differs or times out
+//     FT037-C2 | REQ-FUNC-002 | end | 96 output bytes and tag equal the model | tc_check | 4000 polls | differs
+//   Seed/replay  : +SEED=<n>; +TEST=FT-037
+// =================================================================================================
+task automatic ft037();
+  bit ok, ev, first_ok;
+  int path, beat;
+  tc_begin("FT-037", 2);
+  tc_skip_if(C_GCM_EN == 0, "GCM not built");
+  tc_skip_if(C_LANES < 2, "PARA_AES_LANE_NUM = 1: a full entry is one block, nothing is held");
+  if (tc_skip != "") begin tc_end(); return; end
+  load_vectors("TC-06");
+  path = (C_AXI == 1) ? PATH_AXI_INCR : PATH_PIO;
+  beat = path_beat(path);
+  tc_skip_if(beat > 8, "beat wider than 8 bytes: 40 bytes are not a whole number of beats");
+  if (tc_skip != "") begin tc_end(); return; end
+  set_pin(1'b0);
+  sw_enable((10'h1 << EV_DONE) | EV_ERRS);
+  load_msg(0);
+  start_only(path, 0, 1'b1, 0);
+  build_tx(0, 32, 0, 40, beat);
+  move_part(path, 0, 32 / beat, ok);
+  first_ok = ok && (cmp_out(0, 0, 32, beat, 1'b0) == 0);
+  tc_check("FT037-C1", first_ok, "after the pause the two complete blocks of the 40 bytes are output");
+  build_tx(32, 0, 40, 56, beat);
+  move_part(path, 32 / beat, 64 / beat, ok);
+  wait_event(10'h1 << EV_DONE | EV_ERRS, 4000, ev);
+  read_results();
+  sh_msg_active = 1'b0;
+  tc_check("FT037-C2", first_ok && ok && ev && (cmp_out(32, 32, 64, beat, 1'b0) == 0) &&
+           tag_full_ok(), "all 96 output bytes and the tag equal the uninterrupted model");
   tc_end();
 endtask

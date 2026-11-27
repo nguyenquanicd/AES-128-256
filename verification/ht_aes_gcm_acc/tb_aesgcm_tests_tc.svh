@@ -516,8 +516,9 @@ task automatic tc07();
   sh_msg_active = 1'b0;
   apb_wr(A_CFG, cfg_word(m_mode, m_dec, m_ksz, 0, path_dsrc(path), 0, m_seg, m_tlc, 0));
   cmd(CTRL_FREE);
-  repeat (50) @(posedge clk_bus);
-  apb_rd(A_STS, v);
+  // The spec gives no latency for free (one core clock per context word plus the crossing): poll
+  // aesgcm_sts.ctx_vld of the slot until it reads 0 before resuming it.
+  apb_poll(A_STS, 32'h0001_0000, 32'h0, 400, v, ok);
   clear_events();
   cmd(CTRL_RESUME);
   wait_event(10'h1 << EV_PERR, 60, seen);

@@ -104,6 +104,7 @@ A testcase that does not apply to a build reports **SKIP with the reason from th
 | TEST-034 | TC-08, WF-023 | GCM builds | |
 | TEST-035 | TC-06, FT-011 (export words) | CTX_NUM > 0 | |
 | TEST-036 | TC-02 (Ex. 6), FT-036 (Ex. 5) | Ex. 5 only in build (h) | |
+| TEST-037 | FT-037 (DEC-026 Ex. 3: pause of the stream with N > 1); TC-06 and TC-07 rely on the same flush | skipped when PARA_AES_LANE_NUM = 1 | |
 
 ## 5. Integrated testcases (R-048)
 

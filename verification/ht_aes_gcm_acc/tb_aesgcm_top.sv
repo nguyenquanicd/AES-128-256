@@ -370,7 +370,7 @@ module tb_aesgcm_top;
   `include "tb_aesgcm_wf.svh"
 
   // ------------------------------------------------------------------------------ dispatcher
-  localparam int NTESTS = 52;
+  localparam int NTESTS = 53;
   string test_list [0:NTESTS-1];
   initial begin
     test_list[0]  = "TC-01"; test_list[1]  = "TC-02"; test_list[2]  = "TC-03";
@@ -382,8 +382,8 @@ module tb_aesgcm_top;
     test_list[18] = "FT-014"; test_list[19] = "FT-015"; test_list[20] = "FT-016";
     test_list[21] = "FT-018"; test_list[22] = "FT-026"; test_list[23] = "FT-028";
     test_list[24] = "FT-029"; test_list[25] = "FT-030"; test_list[26] = "FT-031";
-    test_list[27] = "FT-033"; test_list[28] = "FT-036";
-    for (int i = 0; i < 23; i++) test_list[29 + i] = $sformatf("WF-%03d", i + 1);
+    test_list[27] = "FT-033"; test_list[28] = "FT-036"; test_list[29] = "FT-037";
+    for (int i = 0; i < 23; i++) test_list[30 + i] = $sformatf("WF-%03d", i + 1);
   end
 
   time test_t0 = 0;
@@ -434,6 +434,7 @@ module tb_aesgcm_top;
     else if (id == "FT-031") ft031();
     else if (id == "FT-033") ft033();
     else if (id == "FT-036") ft036();
+    else if (id == "FT-037") ft037();
     else if (id == "WF-001") wf001();
     else if (id == "WF-002") wf002();
     else if (id == "WF-003") wf003();
