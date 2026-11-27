@@ -9,7 +9,7 @@
  *                m_vlsit_afifo_top for asynchronous clocks, m_vlsit_sfifo_top for related clocks.
  *                The FIFO write side and its software reset (flush) are in the BUS domain; the
  *                show-ahead read side is in the CORE domain. Structural module.
- * Decisions    : DEC-016, DEC-018, DEC-024 (spec section 20).
+ * Decisions    : DEC-016, DEC-018, DEC-024, DEC-027 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -38,6 +38,7 @@ module m_aesgcm_fifo_in #(
 
   // BUS-side message control
   input  wire                    i_flush,
+  input  wire                    i_hold,
   input  wire                    i_load,
   input  wire  [31:0]            i_aad_len,
   input  wire  [31:0]            i_data_len,
@@ -80,6 +81,7 @@ module m_aesgcm_fifo_in #(
     .i_clk_bus    (i_clk_bus),
     .i_rst_n_bus  (i_rst_n_bus),
     .i_flush      (i_flush),
+    .i_hold       (i_hold),
     .i_load       (i_load),
     .i_aad_len    (i_aad_len),
     .i_data_len   (i_data_len),

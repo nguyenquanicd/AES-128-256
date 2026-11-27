@@ -18,7 +18,7 @@
  *                Status bundle (CDC-002), MSB first: msg_end, suspended, resumed, cmd_ack,
  *                tag_ok, ver_ok, zeroized, key_ld, events 10, err_code 4, err_core 4, phase 4,
  *                ctx_vld 4, failcnt 32, cons_a 32, cons_d 32, rem_a 32, rem_d 32, tag 128 (322).
- * Decisions    : DEC-015, DEC-022, DEC-023, DEC-024 (spec section 20).
+ * Decisions    : DEC-015, DEC-022, DEC-023, DEC-024, DEC-030, DEC-034 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -610,6 +610,7 @@ module m_aesgcm_seq #(
     case (reg_fsm_seq_current_state)
       ENUM_ST_SEQ_IDLE: begin
         o_aes_zeroize = w_idle_zero;
+        o_out_flush   = w_idle_zero;
         o_key_zeroize = w_idle_zero;
         o_gh_zeroize  = w_idle_zero;
         o_gh_clr      = w_idle_zero;
@@ -986,7 +987,10 @@ module m_aesgcm_seq #(
       if (w_idle_zero || w_idle_cmd ||
           ((reg_fsm_seq_current_state == ENUM_ST_SEQ_FIN) && reg_first && reg_cmd_seen))
         reg_cmd_ack <= 1'b1;
-      if (w_st_chg || w_new_evt_any || w_idle_zero || w_idle_cmd || i_cmd_valid)
+      // A slot operation that ends while the sequencer is idle is a free: its result (the slot
+      // valid flags) is reported when it ends, after the acknowledge of the command (DEC-030).
+      if (w_st_chg || w_new_evt_any || w_idle_zero || w_idle_cmd || i_cmd_valid ||
+          ((reg_fsm_seq_current_state == ENUM_ST_SEQ_IDLE) && i_ctx_done))
         reg_dirty <= 1'b1;
       else if (o_sts_send)
         reg_dirty <= 1'b0;

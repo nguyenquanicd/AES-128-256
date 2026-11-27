@@ -10,7 +10,7 @@
  *                i_beat_bytes bytes with the first stream byte in bits [7:0]; the last beat of
  *                the payload is padded with zero bytes. It also evaluates the DMA output
  *                condition of spec 6.3.4: enough bytes for one burst, or all remaining bytes.
- * Decisions    : DEC-018, DEC-020, DEC-021, DEC-024 (spec section 20).
+ * Decisions    : DEC-018, DEC-020, DEC-021, DEC-024, DEC-033 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -69,6 +69,7 @@ module m_aesgcm_unpack #(
   logic [LPARA_BLK_W-1:0]               reg_beat;
   logic [4:0]                           reg_beat_fill;
   logic                                 reg_beat_vld;
+  logic [4:0]                           reg_beat_pay;
   logic [PARA_THR_W-1:0]                reg_thr;
   logic                                 reg_thr_stable;
   logic                                 reg_dma_cond;
@@ -139,10 +140,11 @@ module m_aesgcm_unpack #(
     end
   end
 
-  // Beat outputs and the payload bytes not yet read by the bus.
+  // Beat outputs and the payload bytes not yet read by the bus (the beat held for the bus counts
+  // with its payload bytes, DEC-033).
   assign o_beat_valid = reg_beat_vld;
   assign o_beat_data  = reg_beat;
-  assign o_unread     = reg_rem + 32'(reg_beat_fill);
+  assign o_unread     = reg_rem + 32'(reg_beat_fill) + (reg_beat_vld ? 32'(reg_beat_pay) : 32'd0);
 
   // Message state and unpacking position.
   always_ff @(posedge i_clk_bus, negedge i_rst_n_bus) begin : p_ff_unpack
@@ -157,6 +159,7 @@ module m_aesgcm_unpack #(
       reg_beat        <= '0;
       reg_beat_fill   <= '0;
       reg_beat_vld    <= 1'b0;
+      reg_beat_pay    <= '0;
     end else if (i_flush) begin
       reg_rem       <= '0;
       reg_blk_idx   <= '0;
@@ -164,6 +167,7 @@ module m_aesgcm_unpack #(
       reg_beat      <= '0;
       reg_beat_fill <= '0;
       reg_beat_vld  <= 1'b0;
+      reg_beat_pay  <= '0;
     end else if (i_load) begin
       reg_rem         <= i_data_len;
       reg_bpb         <= i_bpb;
@@ -175,11 +179,13 @@ module m_aesgcm_unpack #(
       reg_beat        <= '0;
       reg_beat_fill   <= '0;
       reg_beat_vld    <= 1'b0;
+      reg_beat_pay    <= '0;
     end else begin
       if (reg_beat_vld && i_beat_ready) begin
         reg_beat_vld  <= 1'b0;
         reg_beat      <= '0;
         reg_beat_fill <= '0;
+        reg_beat_pay  <= '0;
       end
       if (w_build) begin
         reg_rem  <= reg_rem - 32'(w_take);
@@ -187,6 +193,7 @@ module m_aesgcm_unpack #(
         if (((w_fill_base + w_take) == reg_beat_bytes) || (reg_rem == 32'(w_take))) begin
           reg_beat_vld  <= 1'b1;
           reg_beat_fill <= '0;
+          reg_beat_pay  <= w_fill_base + 5'(w_take);
         end else begin
           reg_beat_fill <= w_fill_base + w_take;
         end
@@ -207,7 +214,7 @@ module m_aesgcm_unpack #(
   // behind the head must cover min(burst, unread). Entries before the last one of a message are
   // full, so occupancy >= head + needed entries proves the bytes are present.
   assign w_bpe_bytes = 32'(reg_bpb) * 32'(reg_bpe);
-  assign w_held      = 32'(reg_beat_fill) + 32'(reg_beat_vld ? reg_beat_bytes : 5'd0) +
+  assign w_held      = 32'(reg_beat_fill) + 32'(reg_beat_vld ? reg_beat_pay : 5'd0) +
                        (i_empty ? 32'd0 :
                         (32'(w_blk_cnt - 3'(reg_blk_idx)) * 32'(reg_bpb) - 32'(reg_blk_off)));
   assign w_want      = (o_unread < 32'(reg_burst_bytes)) ? o_unread : 32'(reg_burst_bytes);

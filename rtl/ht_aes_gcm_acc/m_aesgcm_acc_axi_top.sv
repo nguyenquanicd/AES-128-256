@@ -9,7 +9,7 @@
  *                structure u_bus_dom, crossings u_xing and CORE-domain structure u_core_dom.
  *                Structural top. Illegal parameter values are reported by the verification
  *                checker m_aesgcm_param_check (decision of 2026-11-25, rule P14).
- * Decisions    : DEC-016, DEC-019, DEC-020, DEC-024 (spec section 20).
+ * Decisions    : DEC-016, DEC-019, DEC-020, DEC-024, DEC-027 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -181,6 +181,7 @@ module m_aesgcm_acc_axi_top #(
   logic [31:0]                            w_b_in_data_len;
   logic                                   w_b_in_drop;
   logic                                   w_b_in_flush;
+  logic                                   w_b_in_hold;
   logic                                   w_b_in_full;
   logic [LPARA_THR_W-1:0]                 w_b_in_full_thr;
   logic                                   w_b_in_full_thr_flag;
@@ -661,6 +662,7 @@ module m_aesgcm_acc_axi_top #(
     .i_wrsp_valid      (w_b_wrsp_valid),
     .i_wrsp            (w_b_wrsp),
     .o_in_flush        (w_b_in_flush),
+    .o_in_hold         (w_b_in_hold),
     .o_in_load         (w_b_in_load),
     .o_in_aad_len      (w_b_in_aad_len),
     .o_in_data_len     (w_b_in_data_len),
@@ -752,6 +754,7 @@ module m_aesgcm_acc_axi_top #(
     .o_wrsp            (w_b_wrsp),
     .o_sec_only_bus    (w_b_sec_only),
     .i_in_flush        (w_b_in_flush),
+    .i_in_hold         (w_b_in_hold),
     .i_in_load         (w_b_in_load),
     .i_in_aad_len      (w_b_in_aad_len),
     .i_in_data_len     (w_b_in_data_len),

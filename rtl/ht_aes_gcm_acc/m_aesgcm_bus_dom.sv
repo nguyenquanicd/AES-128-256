@@ -9,7 +9,7 @@
  *                (output), and the AXI4 window u_axi_win elaborated when PARA_AXI_EN = 1.
  * Deviation    : HIE-02 (SHOULD) - the selection between the PIO beats and the AXI beats and
  *                the idle outputs of the absent window are assigned here.
- * Decisions    : DEC-016, DEC-024 (spec section 20).
+ * Decisions    : DEC-016, DEC-024, DEC-027, DEC-028 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -163,6 +163,7 @@ module m_aesgcm_bus_dom #(
   input  wire                                    i_wrsp_valid,
   input  wire  [LPARA_WRSP_W-1:0]                i_wrsp,
   output logic                                   o_in_flush,
+  output logic                                   o_in_hold,
   output logic                                   o_in_load,
   output logic [31:0]                            o_in_aad_len,
   output logic [31:0]                            o_in_data_len,
@@ -344,6 +345,7 @@ module m_aesgcm_bus_dom #(
     .i_wrsp            (i_wrsp),
     .o_dat_src         (w_dat_src),
     .o_in_flush        (o_in_flush),
+    .o_in_hold         (o_in_hold),
     .o_in_load         (o_in_load),
     .o_in_aad_len      (o_in_aad_len),
     .o_in_data_len     (o_in_data_len),
@@ -354,6 +356,7 @@ module m_aesgcm_bus_dom #(
     .i_in_active       (i_in_active),
     .i_in_drop         (i_in_drop),
     .i_in_full         (i_in_full),
+    .i_beat_ready      (i_beat_ready),
     .i_in_full_thr     (i_in_full_thr),
     .o_out_flush       (o_out_flush),
     .o_out_load        (o_out_load),

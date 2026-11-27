@@ -11,7 +11,9 @@
  *                an illegal one is consumed without push; the response is SLVERR (0b10) for an
  *                illegal burst or a WLAST at another beat than AWLEN. FSM axr serves one read
  *                burst at a time from the output stream (address bit 11 = 1), or returns zero
- *                beats with SLVERR for an illegal burst. IDs are returned unchanged.
+ *                beats with SLVERR for an illegal burst. IDs are returned unchanged. AWREADY and
+ *                ARREADY are low during reset and the first clock after it (DEC-025).
+ * Decisions    : DEC-025 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -131,6 +133,16 @@ module m_aesgcm_axi_win #(
   logic                   w_ar_legal;
   logic                   w_r_last;
   logic                   w_wstrb_unused;
+  logic                   reg_run;
+
+  // AWREADY and ARREADY stay low while the BUS reset is asserted and for the first clock after its
+  // release (port reset value 0, spec 7.3, DEC-025): the flag is the registered "reset released".
+  always_ff @(posedge i_clk_bus, negedge i_rst_n_bus) begin : p_ff_run
+    if (!i_rst_n_bus)
+      reg_run <= 1'b0;
+    else
+      reg_run <= 1'b1;
+  end
 
   // ------------------------------------------------------------------- write window
 
@@ -177,7 +189,7 @@ module m_aesgcm_axi_win #(
     o_axi_wready  = 1'b0;
     o_axi_bvalid  = 1'b0;
     case (reg_fsm_axw_current_state)
-      ENUM_ST_AXW_IDLE: o_axi_awready = 1'b1;
+      ENUM_ST_AXW_IDLE: o_axi_awready = reg_run;
       ENUM_ST_AXW_DATA: o_axi_wready  = reg_drop | i_beat_ready;
       ENUM_ST_AXW_RESP: o_axi_bvalid  = 1'b1;
       default:          o_axi_awready = 1'b0;
@@ -259,7 +271,7 @@ module m_aesgcm_axi_win #(
     o_axi_rresp   = 2'(LPARA_RESP_OKAY);
     o_axi_rdata   = '0;
     case (reg_fsm_axr_current_state)
-      ENUM_ST_AXR_IDLE: o_axi_arready = 1'b1;
+      ENUM_ST_AXR_IDLE: o_axi_arready = reg_run;
       ENUM_ST_AXR_DATA: begin
         o_axi_rvalid = i_obeat_valid;
         o_axi_rdata  = i_obeat_data[PARA_AXI_DATA_W-1:0];

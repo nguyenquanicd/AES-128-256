@@ -11,7 +11,12 @@
  *                tag and an end-of-segment flag. An entry never mixes segments; the bytes of a
  *                beat after the end of a segment are beat padding and are discarded. A beat that
  *                arrives while no segment byte is outstanding is dropped and reported (ERR-005).
- * Decisions    : DEC-018, DEC-021 (spec section 20).
+ *                When the beat stream is idle for LPARA_IDLE_CLK clocks while completed blocks wait
+ *                in an unfinished entry, the entry is written early with the blocks it holds
+ *                (the bytes of an unfinished block stay in the packer); the segment is not ended,
+ *                so the end flag is 0 (DEC-026). While i_hold is 1 (a resume waits for the restored
+ *                lengths) no beat is accepted, so none is lost (DEC-027).
+ * Decisions    : DEC-018, DEC-021, DEC-026, DEC-027 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -23,6 +28,7 @@ module m_aesgcm_pack #(
   localparam logic [31:0] LPARA_BLK_W = 128,
   localparam logic [31:0] LPARA_BYTE_W = 8,
   localparam logic [31:0] LPARA_BLK_BYTES = LPARA_BLK_W / LPARA_BYTE_W,
+  localparam logic [31:0] LPARA_IDLE_CLK = 16,
   localparam logic [31:0] LPARA_ENT_W = PARA_LANE_NUM * LPARA_BLK_W + PARA_LANE_NUM + 2
 ) (
   // Clock and reset (BUS domain)
@@ -32,6 +38,7 @@ module m_aesgcm_pack #(
   // Message control
   input  wire                    i_flush,
   input  wire                    i_load,
+  input  wire                    i_hold,
   input  wire  [31:0]            i_aad_len,
   input  wire  [31:0]            i_data_len,
   input  wire  [4:0]             i_bpb,
@@ -81,6 +88,10 @@ module m_aesgcm_pack #(
   logic [LPARA_BLK_BYTES-1:0][4:0]      w_src_pos;
   logic [PARA_LANE_NUM*LPARA_BLK_W-1:0] w_ent_new;
   logic [PARA_LANE_NUM-1:0]             w_mask;
+  logic [4:0]                           reg_idle;
+  logic                                 w_quiet;
+  logic                                 w_idle_flush;
+  logic [PARA_LANE_NUM-1:0]             w_idle_mask;
 
   // Bytes left in the beat buffer, room left in the block, and the bytes moved this clock.
   assign w_avail = reg_beat_bytes - reg_beat_off;
@@ -107,7 +118,7 @@ module m_aesgcm_pack #(
   assign w_beat_drop = reg_beat_vld & ~reg_active;
 
   // The beat buffer is free when it is empty or when its last byte leaves in this clock.
-  assign o_beat_ready = ~reg_beat_vld | w_beat_used | w_beat_drop;
+  assign o_beat_ready = (~reg_beat_vld | w_beat_used | w_beat_drop) & ~i_hold;
   assign w_beat_take  = i_beat_valid & o_beat_ready;
   assign o_drop       = w_beat_drop;
   assign o_active     = reg_active;
@@ -144,9 +155,33 @@ module m_aesgcm_pack #(
     end
   end
 
-  // FIFO write: one entry {segment, end of segment, lane mask, blocks} when it completes.
-  assign o_wr_en   = w_proc & w_ent_done & ~i_full;
-  assign o_wr_data = {reg_seg, w_seg_end, w_mask, w_ent_new};
+  // Idle flush (DEC-026): completed blocks wait in the entry, no beat is held or offered, and the
+  // stream has been quiet for LPARA_IDLE_CLK clocks. The entry holds reg_ent_cnt blocks.
+  assign w_quiet      = reg_active & ~reg_beat_vld & ~i_beat_valid & (reg_ent_cnt != 3'd0);
+  assign w_idle_flush = w_quiet & (reg_idle == 5'(LPARA_IDLE_CLK)) & ~i_full;
+
+  always_comb begin : p_com_idle_mask
+    w_idle_mask = '0;
+    for (int idx = 0; idx < PARA_LANE_NUM; idx++) begin
+      if (3'(idx) < reg_ent_cnt)
+        w_idle_mask[idx] = 1'b1;
+    end
+  end
+
+  always_ff @(posedge i_clk_bus, negedge i_rst_n_bus) begin : p_ff_idle
+    if (!i_rst_n_bus)
+      reg_idle <= '0;
+    else if (i_flush || i_load || !w_quiet || w_idle_flush)
+      reg_idle <= '0;
+    else if (reg_idle != 5'(LPARA_IDLE_CLK))
+      reg_idle <= reg_idle + 5'd1;
+  end
+
+  // FIFO write: one entry {segment, end of segment, lane mask, blocks} when it completes, or the
+  // early entry of the idle flush (end flag 0).
+  assign o_wr_en   = (w_proc & w_ent_done & ~i_full) | w_idle_flush;
+  assign o_wr_data = w_idle_flush ? {reg_seg, 1'b0, w_idle_mask, reg_ent} :
+                                    {reg_seg, w_seg_end, w_mask, w_ent_new};
 
   // Message and segment state; flush and load have priority over the byte movement.
   always_ff @(posedge i_clk_bus, negedge i_rst_n_bus) begin : p_ff_seg
@@ -243,6 +278,10 @@ module m_aesgcm_pack #(
           reg_ent     <= w_ent_new;
           reg_ent_cnt <= reg_ent_cnt + 3'd1;
         end
+      end
+      if (w_idle_flush) begin
+        reg_ent     <= '0;
+        reg_ent_cnt <= '0;
       end
     end
   end

@@ -8,7 +8,7 @@
  *                CDC-002 (u_xing_sts), CDC-005 (u_xing_cmd), CDC-007 (u_xing_wreq, u_xing_wrsp),
  *                data FIFOs CDC-003 (u_fifo_in) and CDC-004 (u_fifo_out), and the CDC-006
  *                synchronizers of i_gcm_secure_only. Structural module.
- * Decisions    : DEC-016, DEC-022, DEC-024 (spec section 20).
+ * Decisions    : DEC-016, DEC-022, DEC-024, DEC-027 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -61,6 +61,7 @@ module m_aesgcm_xing #(
 
   // BUS side of the data FIFOs
   input  wire                        i_in_flush,
+  input  wire                        i_in_hold,
   input  wire                        i_in_load,
   input  wire  [31:0]                i_in_aad_len,
   input  wire  [31:0]                i_in_data_len,
@@ -229,6 +230,7 @@ module m_aesgcm_xing #(
     .i_clk_bus    (i_clk_bus),
     .i_rst_n_bus  (i_rst_n_bus),
     .i_flush      (i_in_flush),
+    .i_hold       (i_in_hold),
     .i_load       (i_in_load),
     .i_aad_len    (i_in_aad_len),
     .i_data_len   (i_in_data_len),

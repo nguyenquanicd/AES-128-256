@@ -12,7 +12,8 @@
  *                unpacker control, and the context export and import sequences of CDC-007.
  *                CSR word k of a key, IV or tag holds bytes 4k to 4k+3 with byte 4k in bits [7:0]
  *                (spec 9.1); the bundle carries blocks with byte 0 in the most significant byte.
- * Decisions    : DEC-016, DEC-020, DEC-022, DEC-023, DEC-024 (spec section 20).
+ * Decisions    : DEC-016, DEC-020, DEC-022, DEC-023, DEC-024, DEC-027, DEC-028,
+ *                DEC-031, DEC-032, DEC-035 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -196,6 +197,7 @@ module m_aesgcm_bus_ctl #(
   // Data path control
   output logic                                   o_dat_src,
   output logic                                   o_in_flush,
+  output logic                                   o_in_hold,
   output logic                                   o_in_load,
   output logic [31:0]                            o_in_aad_len,
   output logic [31:0]                            o_in_data_len,
@@ -206,6 +208,7 @@ module m_aesgcm_bus_ctl #(
   input  wire                                    i_in_active,
   input  wire                                    i_in_drop,
   input  wire                                    i_in_full,
+  input  wire                                    i_beat_ready,
   input  wire                                    i_in_full_thr,
   output logic                                   o_out_flush,
   output logic                                   o_out_load,
@@ -229,6 +232,7 @@ module m_aesgcm_bus_ctl #(
   logic                     reg_busy;
   logic                     reg_start_sent;
   logic                     reg_res_sent;
+  logic                     reg_res_wait;
   logic [3:0]               reg_cmd_sent;
   logic                     reg_klat_vld;
   logic                     reg_klat_size;
@@ -459,8 +463,12 @@ module m_aesgcm_bus_ctl #(
   assign o_sts_sec_only   = i_sec_only;
   assign o_err_code       = reg_err_code;
   assign o_err_core       = reg_err_core;
-  assign o_fifo_in_full   = i_in_full;
-  assign o_fifo_out_empty = i_out_empty & ~i_out_beat_valid;
+  // The flag reads 1 when the input path cannot take another word (FIFO full and the beat buffer of
+  // the packer occupied, or a resume wait): a write that finds it 0 is always accepted (DEC-028).
+  assign o_fifo_in_full   = ~i_beat_ready | o_in_hold;
+  // The flag reads 0 only when a beat is ready, so a read that finds it 0 is always served; the
+  // unpacker needs some clocks to build a beat from the FIFO entry (DEC-035).
+  assign o_fifo_out_empty = ~i_out_beat_valid;
 
   // ------------------------------------------------------------------- data path control
 
@@ -470,6 +478,9 @@ module m_aesgcm_bus_ctl #(
   assign o_in_flush        = w_flush_cmd | (i_sts_valid & (w_s_susp | (w_s_msg_end & (w_s_err != 4'd0))));
   assign o_out_flush       = w_flush_cmd;
   assign o_in_load         = w_start_ok | (i_sts_valid & w_s_res);
+  // Resume hold (DEC-027): from the accepted resume request until the report that carries the
+  // restored lengths, the data path accepts no beat and the input FIFO reads as full.
+  assign o_in_hold         = reg_res_wait | w_res_ok;
   assign o_out_load        = o_in_load;
   assign o_in_aad_len      = w_start_ok ? i_aad_len : w_s_rem_a;
   assign o_in_data_len     = w_start_ok ? i_data_len : w_s_rem_d;
@@ -552,7 +563,7 @@ module m_aesgcm_bus_ctl #(
     end else begin
       if (w_start_ok || w_res_go || (w_res_ok && (PARA_GCM_CTX_MODE == 1)))
         reg_busy <= 1'b1;
-      else if (i_sts_valid && w_s_msg_end)
+      else if (i_sts_valid && (w_s_msg_end || (w_s_ack && (|reg_cmd_sent[3:2]))))
         reg_busy <= 1'b0;
       if (w_start_ok) begin
         reg_start_sent <= 1'b1;
@@ -584,8 +595,20 @@ module m_aesgcm_bus_ctl #(
     end
   end
 
-  // Last status report and the error code: a start clears the code, a start-time error sets
-  // it, a report with a nonzero code sets it, a runtime protocol error sets it when it is 0.
+  // Resume wait flag: set with the accepted resume request, cleared by the resume report, a message
+  // end (error) or abort and zeroize.
+  always_ff @(posedge i_clk_bus, negedge i_rst_n_bus) begin : p_ff_res_wait
+    if (!i_rst_n_bus)
+      reg_res_wait <= 1'b0;
+    else if (w_flush_cmd || (i_sts_valid && (w_s_res || w_s_msg_end)))
+      reg_res_wait <= 1'b0;
+    else if (w_res_ok)
+      reg_res_wait <= 1'b1;
+  end
+
+  // Last status report and the error code: a start clears the code, a start-time error (also the
+  // protocol error of a start that is refused while no message is active, DEC-031) sets it, a
+  // report with a nonzero code sets it, a runtime protocol error sets it when it is 0.
   always_ff @(posedge i_clk_bus, negedge i_rst_n_bus) begin : p_ff_sts
     if (!i_rst_n_bus) begin
       reg_sts      <= '0;
@@ -595,19 +618,22 @@ module m_aesgcm_bus_ctl #(
       if (i_sts_valid)
         reg_sts <= i_sts;
       casez ({w_start_ok, w_start_req & i_cfg_idle & w_cfg_err,
-              w_start_req & i_cfg_idle & w_len_err, i_sts_valid & (w_s_err != 4'd0),
+              w_start_req & i_cfg_idle & w_len_err,
+              w_start_req & i_cfg_idle & ~w_cfg_err & ~w_len_err & ~reg_busy & w_start_perr,
+              i_sts_valid & (w_s_err != 4'd0),
               w_bus_perr & (reg_err_code == ENUM_ERR_NONE)})
-        5'b1????: begin
+        6'b1?????: begin
           reg_err_code <= ENUM_ERR_NONE;
           reg_err_core <= '0;
         end
-        5'b01???: reg_err_code <= ENUM_ERR_CFG;
-        5'b001??: reg_err_code <= ENUM_ERR_LEN;
-        5'b0001?: begin
+        6'b01????: reg_err_code <= ENUM_ERR_CFG;
+        6'b001???: reg_err_code <= ENUM_ERR_LEN;
+        6'b0001??: reg_err_code <= ENUM_ERR_PROTO;
+        6'b00001?: begin
           reg_err_code <= err_type_def'(w_s_err);
           reg_err_core <= i_sts[LPARA_STS_W-23 -: 4];
         end
-        5'b00001: reg_err_code <= ENUM_ERR_PROTO;
+        6'b000001: reg_err_code <= ENUM_ERR_PROTO;
         default:  reg_err_code <= reg_err_code;
       endcase
     end
