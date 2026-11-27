@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="700" viewBox="350 280 920 700" font-family="Arial, Helvetica, sans-serif" font-size="18">
+<rect x="350" y="280" width="920" height="700" fill="#FFFFFF"/>
+<rect x="560" y="410" width="590" height="380" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<rect x="600" y="675" width="200" height="70" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="700" y="706" text-anchor="middle">u_csr</text>
+<text x="700" y="728" text-anchor="middle">(m_vlsit_csr_aesgcm)</text>
+<rect x="910" y="675" width="200" height="70" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1010" y="706" text-anchor="middle">u_bus_dom</text>
+<text x="1010" y="728" text-anchor="middle">(m_aesgcm_bus_dom)</text>
+<rect x="910" y="505" width="200" height="70" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1010" y="536" text-anchor="middle">u_xing</text>
+<text x="1010" y="558" text-anchor="middle">(m_aesgcm_xing)</text>
+<rect x="600" y="505" width="200" height="70" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="700" y="536" text-anchor="middle">u_core_dom</text>
+<text x="700" y="558" text-anchor="middle">(m_aesgcm_core_dom)</text>
+<text x="875" y="836" text-anchor="middle">AXI</text>
+<text x="875" y="858" text-anchor="middle">i_axi_*</text>
+<text x="1170" y="836" text-anchor="middle">INT</text>
+<text x="1170" y="858" text-anchor="middle">o_int_aesgcm</text>
+<text x="1010" y="921" text-anchor="middle">DMA</text>
+<text x="1010" y="943" text-anchor="middle">o_dma_*, i_dma_*</text>
+<text x="445" y="536" text-anchor="middle">KEY</text>
+<text x="445" y="558" text-anchor="middle">i_key_side*</text>
+<text x="700" y="331" text-anchor="middle">SEC</text>
+<text x="700" y="353" text-anchor="middle">i_gcm_secure_only</text>
+<text x="1128" y="451" text-anchor="end">AES-GCM ACCELERATOR</text>
+<text x="1128" y="473" text-anchor="end">(m_aesgcm_acc_axi_top)</text>
+<text x="825" y="696" text-anchor="middle">REG</text>
+<text x="1097" y="612" text-anchor="middle">CMD</text>
+<text x="820" y="526" text-anchor="middle">XB</text>
+<text x="700" y="861" text-anchor="middle">CRCLK</text>
+<text x="700" y="883" text-anchor="middle">i_clk_*, i_rst_n_*</text>
+<text x="465" y="706" text-anchor="middle">APB</text>
+<text x="465" y="728" text-anchor="middle">i_apb_*</text>
+<path d="M 700 840 L 700 745" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="700,745 706,757 694,757" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 510 710 L 600 710" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="600,710 588,716 588,704" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 930 840 L 930 745" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="930,745 936,757 924,757" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 1090 745 L 1090 840" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1090,840 1084,828 1096,828" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 1010 745 L 1010 900" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1010,900 1004,888 1016,888" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 510 540 L 600 540" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="600,540 588,546 588,534" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 700 360 L 700 505" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="700,505 694,493 706,493" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 800 710 L 910 710" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="910,710 898,716 898,704" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 910 540 L 800 540" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="800,540 812,534 812,546" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 1110 710 L 1130 710 L 1130 540 L 1110 540" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1110,540 1122,534 1122,546" fill="#000000" stroke="#000000" stroke-width="1"/>
+</svg>

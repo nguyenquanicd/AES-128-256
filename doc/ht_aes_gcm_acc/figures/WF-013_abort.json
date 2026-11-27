@@ -1,0 +1,46 @@
+{
+ "head": {
+  "text": "WF-013 Abort during the payload phase (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p..................."
+  },
+  {
+   "name": "cmd_abort",
+   "wave": "0.....10............"
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=......=......=.....",
+   "data": [
+    "PAY",
+    "ABRT",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "fifo_flush",
+   "wave": "0......1..0........."
+  },
+  {
+   "name": "out_fifo_level",
+   "wave": "=.......=...........",
+   "data": [
+    "6",
+    "0"
+   ]
+  },
+  {
+   "name": "key_ld",
+   "wave": "1..................."
+  }
+ ],
+ "foot": {
+  "text": "Abort stops the message, flushes the FIFOs and returns to IDLE; the key store is kept."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

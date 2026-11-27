@@ -1,0 +1,53 @@
+{
+ "head": {
+  "text": "WF-018 Reset of both domains during an active message"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p................."
+  },
+  {
+   "name": "i_rst_n_bus",
+   "wave": "1.....0...1......."
+  },
+  {
+   "name": "i_rst_n_core",
+   "wave": "1.....0...1......."
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=.....=...........",
+   "data": [
+    "PAY",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "bundle_req",
+   "wave": "0.1...0..........."
+  },
+  {
+   "name": "o_dma_in_req",
+   "wave": "01....0..........."
+  },
+  {
+   "name": "o_int_aesgcm",
+   "wave": "0..1..0..........."
+  },
+  {
+   "name": "key_store",
+   "wave": "=.....=...........",
+   "data": [
+    "K",
+    "0"
+   ]
+  }
+ ],
+ "foot": {
+  "text": "Asynchronous reset clears the sequencer, handshakes, interrupt and key stores at once; release is synchronized per domain."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

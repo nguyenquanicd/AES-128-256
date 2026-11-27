@@ -1,0 +1,41 @@
+{
+ "head": {
+  "text": "WF-015 Interrupt raise, mask, clear (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p..................."
+  },
+  {
+   "name": "event_pulse_done",
+   "wave": "0..10..............."
+  },
+  {
+   "name": "irq_raw_done",
+   "wave": "0...1.........0....."
+  },
+  {
+   "name": "irq_en_done",
+   "wave": "1..................."
+  },
+  {
+   "name": "irq_sts_done",
+   "wave": "0...1.........0....."
+  },
+  {
+   "name": "o_int_aesgcm",
+   "wave": "0....1.........0...."
+  },
+  {
+   "name": "apb_w1c_write",
+   "wave": "0..........1.0......"
+  }
+ ],
+ "foot": {
+  "text": "A DONE event sets the raw bit, the enabled status drives the interrupt line, software writes 1 to clear, and the line falls two clocks after the last cause clears."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

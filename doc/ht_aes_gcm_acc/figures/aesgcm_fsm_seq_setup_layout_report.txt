@@ -1,0 +1,16 @@
+FSM: message sequencer, setup view
+STATES: 8, TRANSITIONS: 14
+GLOBAL CONTROLS: 0 (notation panel; exact guards in CONDITION_MAPPING)
+RESET ENTRY: 1, CONTINUATION ENTRIES: 0
+LAYOUT: flow-lr-snake-3-g180
+CROSSINGS: 0
+CONNECTOR CONFLICTS: 0 (minimum clearance 50 px)
+LABEL CONFLICTS: 0
+MAX LABEL DISTANCE: 100.0 px (maximum 120 px)
+NODE HITS: 0
+BENDS: 25
+MINIMUM GAP: 148.1 px (minimum 140 px)
+TEXT FIT: PASS (worst fill ratio 0.89)
+DISTRIBUTION: PASS (3 x-centers, 8 y-centers)
+PAGE: 1358 x 1072 px
+RESULT: PASS

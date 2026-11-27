@@ -1,0 +1,48 @@
+{
+ "head": {
+  "text": "WF-023 DEC-022: abort through the command crossing, cleared by the acknowledging status report"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p..................."
+  },
+  {
+   "name": "aesgcm_ctrl.abort",
+   "wave": "0.1..............0.."
+  },
+  {
+   "name": "cmd_send (u_xing_cmd)",
+   "wave": "0..10..............."
+  },
+  {
+   "name": "cmd_valid (CORE)",
+   "wave": "0.....10............"
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=......=...=...=....",
+   "data": [
+    "PAY",
+    "ABRT",
+    "FIN",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "sts_valid cmd_ack=1",
+   "wave": "0..............10..."
+  },
+  {
+   "name": "hw clear abort",
+   "wave": "0...............10.."
+  },
+  {
+   "name": "aesgcm_sts.busy",
+   "wave": "1...............0..."
+  }
+ ],
+ "foot": {
+  "text": "Example: abort written at bus clock 2 is sent at clock 3, reaches the sequencer at clock 6, FIN reports cmd_ack at clock 15 and the bit reads 0 from clock 17"
+ }
+}

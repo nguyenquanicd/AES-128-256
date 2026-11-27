@@ -1,0 +1,57 @@
+{
+ "head": {
+  "text": "WF-002 AES-128 GCM encryption: 1 AAD block and 2 payload blocks (CORE clock, 1 lane)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p......................................."
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "==.=...........==.=...........==..==....",
+   "data": [
+    "KEY",
+    "SU_CFG",
+    "SU_RUN",
+    "AAD",
+    "PY_CFG",
+    "PAY",
+    "LEN",
+    "TAG",
+    "FIN",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "core_cfg_valid",
+   "wave": "01.0............1.0....................."
+  },
+  {
+   "name": "core_batch_valid",
+   "wave": "0..1.0............1.0..................."
+  },
+  {
+   "name": "core_out_valid",
+   "wave": "0............1.0............1.0........."
+  },
+  {
+   "name": "ghash_valid",
+   "wave": "0..............10...........1..0........"
+  },
+  {
+   "name": "tag_valid",
+   "wave": "0................................10....."
+  },
+  {
+   "name": "o_done",
+   "wave": "0.................................10...."
+  }
+ ],
+ "foot": {
+  "text": "Setup encrypts 0^128 and J0 (C10 latency), AAD enters GHASH only, payload runs in CTR (C10), the length block closes GHASH, then the tag is formed. Illustrative."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

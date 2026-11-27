@@ -1,0 +1,49 @@
+{
+ "head": {
+  "text": "WF-001 Start command and configuration bundle crossing (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p..............."
+  },
+  {
+   "name": "i_apb_psel",
+   "wave": "0.1..0.........."
+  },
+  {
+   "name": "i_apb_penable",
+   "wave": "0..1.0.........."
+  },
+  {
+   "name": "o_apb_pready",
+   "wave": "0...10.........."
+  },
+  {
+   "name": "aesgcm_ctrl_start",
+   "wave": "0....1...0......"
+  },
+  {
+   "name": "bundle_req",
+   "wave": "0.....1..0......"
+  },
+  {
+   "name": "bundle_ack_sync",
+   "wave": "0.......1..0...."
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=........=......",
+   "data": [
+    "IDLE",
+    "KEY"
+   ]
+  }
+ ],
+ "foot": {
+  "text": "Software writes aesgcm_ctrl.start; the BUS side raises the bundle request, the CORE side acknowledges, the request falls, then the sequencer leaves IDLE. Illustrative; latency depends on PARA_CLK_ASYNC."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

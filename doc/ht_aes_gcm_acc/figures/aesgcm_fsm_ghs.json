@@ -1,0 +1,94 @@
+{
+  "page_name": "FSM_GHS",
+  "out_name": "aesgcm_fsm_ghs.drawio",
+  "function": "digit-serial multiplier control",
+  "initial": "ENUM_ST_GHS_IDLE",
+  "reset": {
+    "signal": "i_rst_n_core",
+    "active_level": "low"
+  },
+  "states": [
+    {
+      "name": "ENUM_ST_GHS_IDLE",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_GHS_RUN",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_GHS_DONE",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_GHS_IDLE",
+      "dst": "ENUM_ST_GHS_IDLE",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_GHS_RUN",
+      "dst": "ENUM_ST_GHS_RUN",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_GHS_IDLE",
+      "dst": "ENUM_ST_GHS_RUN",
+      "label": "operands valid"
+    },
+    {
+      "src": "ENUM_ST_GHS_RUN",
+      "dst": "ENUM_ST_GHS_DONE",
+      "label": "last digit"
+    },
+    {
+      "src": "ENUM_ST_GHS_DONE",
+      "dst": "ENUM_ST_GHS_IDLE",
+      "label": "result taken"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "operands valid",
+      "expression": "i_valid && o_ready"
+    },
+    {
+      "label": "last digit",
+      "expression": "w_digit_cnt == LPARA_DIGIT_LAST"
+    },
+    {
+      "label": "result taken",
+      "expression": "1'b1"
+    }
+  ],
+  "layout": {
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_GHS_IDLE": [
+        260,
+        460
+      ],
+      "ENUM_ST_GHS_RUN": [
+        740,
+        200
+      ],
+      "ENUM_ST_GHS_DONE": [
+        740,
+        460
+      ]
+    }
+  },
+  "global_overrides": [
+    {
+      "id": "G1",
+      "source": "ANY STATE",
+      "destination": "ENUM_ST_GHS_IDLE",
+      "expression": "w_cmd_abort",
+      "note": "Abort forces idle."
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+ "head": {
+  "text": "WF-019 Legacy CTR message through the PIO path, one block (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p......................."
+  },
+  {
+   "name": "aesgcm_cfg_mode",
+   "wave": "=.......................",
+   "data": [
+    "4 CTR"
+   ]
+  },
+  {
+   "name": "aesgcm_ctrl_start",
+   "wave": "01..0..................."
+  },
+  {
+   "name": "o_reg_wr_en",
+   "wave": "0....1...0.............."
+  },
+  {
+   "name": "pio_din_word",
+   "wave": "x....====...............",
+   "data": [
+    "W0",
+    "W1",
+    "W2",
+    "W3"
+   ]
+  },
+  {
+   "name": "fifo_push",
+   "wave": "0....1...0.............."
+  },
+  {
+   "name": "core_out_valid",
+   "wave": "0..............10......."
+  },
+  {
+   "name": "o_reg_rd_en",
+   "wave": "0................1...0.."
+  },
+  {
+   "name": "pio_dout_word",
+   "wave": "x................====...",
+   "data": [
+    "C0",
+    "C1",
+    "C2",
+    "C3"
+   ]
+  },
+  {
+   "name": "irq_raw_done",
+   "wave": "0....................1.."
+  }
+ ],
+ "foot": {
+  "text": "Four 32-bit words are pushed, the AES core runs CTR, four words are popped, and DONE is raised. No GHASH or tag is involved."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

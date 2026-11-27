@@ -1,0 +1,16 @@
+FSM: message sequencer, data view
+STATES: 6, TRANSITIONS: 12
+GLOBAL CONTROLS: 0 (notation panel; exact guards in CONDITION_MAPPING)
+RESET ENTRY: 0, CONTINUATION ENTRIES: 2 (FSM_SEQ_SETUP -> ENUM_ST_SEQ_AAD, FSM_SEQ_SETUP -> ENUM_ST_SEQ_PY_CFG)
+LAYOUT: manual
+CROSSINGS: 0
+CONNECTOR CONFLICTS: 0 (minimum clearance 50 px)
+LABEL CONFLICTS: 0
+MAX LABEL DISTANCE: 60.0 px (maximum 120 px)
+NODE HITS: 0
+BENDS: 19
+MINIMUM GAP: 220.0 px (minimum 180 px)
+TEXT FIT: PASS (worst fill ratio 0.84)
+DISTRIBUTION: PASS (3 x-centers, 2 y-centers)
+PAGE: 1669 x 787 px
+RESULT: PASS

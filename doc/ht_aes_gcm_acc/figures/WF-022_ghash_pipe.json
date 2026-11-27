@@ -1,0 +1,55 @@
+{
+ "head": {
+  "text": "WF-022 GHASH feed-forward pipeline, N = 4, batches of 4, 4 and 2 blocks (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p........."
+  },
+  {
+   "name": "ghash_in_valid",
+   "wave": "01..0....."
+  },
+  {
+   "name": "in_count",
+   "wave": "x====.....",
+   "data": [
+    "4",
+    "4",
+    "2",
+    "x"
+   ]
+  },
+  {
+   "name": "pp_valid_pipe1",
+   "wave": "0.1..0...."
+  },
+  {
+   "name": "ghash_y_pipe1",
+   "wave": "=..===....",
+   "data": [
+    "Y0",
+    "Y1",
+    "Y2",
+    "Y3"
+   ]
+  },
+  {
+   "name": "ghash_y_pipe0",
+   "wave": "=.===.....",
+   "data": [
+    "Y0",
+    "Y1",
+    "Y2",
+    "Y3"
+   ]
+  }
+ ],
+ "foot": {
+  "text": "With PARA_GHASH_PIPE = 1 the registered products P of each batch are added one clock later: Y(n) = Y(n-1) * H^k xor P(n). Final Y equals SP 800-38D Algorithm 2 in both cases."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

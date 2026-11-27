@@ -1,0 +1,333 @@
+{
+ "page_name": "FSM_SEQ",
+ "out_name": "aesgcm_fsm_seq.drawio",
+ "function": "message sequencer",
+ "initial": "ENUM_ST_SEQ_IDLE",
+ "reset": {
+  "signal": "i_rst_n_core",
+  "active_level": "low"
+ },
+ "states": [
+  {
+   "name": "ENUM_ST_SEQ_IDLE",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_KEY",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_SU_CFG",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_SU_RUN",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_POW",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_AAD",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_PY_CFG",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_PAY",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_LEN",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_TAG",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_FIN",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_SUSP",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_REST",
+   "conditional_exit": true,
+   "hold_conditions": []
+  },
+  {
+   "name": "ENUM_ST_SEQ_ABRT",
+   "conditional_exit": true,
+   "hold_conditions": []
+  }
+ ],
+ "transitions": [
+  {
+   "src": "ENUM_ST_SEQ_IDLE",
+   "dst": "ENUM_ST_SEQ_IDLE",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_KEY",
+   "dst": "ENUM_ST_SEQ_KEY",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_SU_CFG",
+   "dst": "ENUM_ST_SEQ_SU_CFG",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_SU_RUN",
+   "dst": "ENUM_ST_SEQ_SU_RUN",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_POW",
+   "dst": "ENUM_ST_SEQ_POW",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_AAD",
+   "dst": "ENUM_ST_SEQ_AAD",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_PY_CFG",
+   "dst": "ENUM_ST_SEQ_PY_CFG",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_PAY",
+   "dst": "ENUM_ST_SEQ_PAY",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_LEN",
+   "dst": "ENUM_ST_SEQ_LEN",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_TAG",
+   "dst": "ENUM_ST_SEQ_TAG",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_FIN",
+   "dst": "ENUM_ST_SEQ_FIN",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_SUSP",
+   "dst": "ENUM_ST_SEQ_SUSP",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_REST",
+   "dst": "ENUM_ST_SEQ_REST",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_ABRT",
+   "dst": "ENUM_ST_SEQ_ABRT",
+   "label": ""
+  },
+  {
+   "src": "ENUM_ST_SEQ_IDLE",
+   "dst": "ENUM_ST_SEQ_KEY",
+   "label": "new message"
+  },
+  {
+   "src": "ENUM_ST_SEQ_IDLE",
+   "dst": "ENUM_ST_SEQ_REST",
+   "label": "resume"
+  },
+  {
+   "src": "ENUM_ST_SEQ_KEY",
+   "dst": "ENUM_ST_SEQ_SU_CFG",
+   "label": "key ready GCM"
+  },
+  {
+   "src": "ENUM_ST_SEQ_KEY",
+   "dst": "ENUM_ST_SEQ_PY_CFG",
+   "label": "key ready no setup"
+  },
+  {
+   "src": "ENUM_ST_SEQ_SU_CFG",
+   "dst": "ENUM_ST_SEQ_SU_RUN",
+   "label": "core configured"
+  },
+  {
+   "src": "ENUM_ST_SEQ_SU_RUN",
+   "dst": "ENUM_ST_SEQ_POW",
+   "label": "setup results"
+  },
+  {
+   "src": "ENUM_ST_SEQ_POW",
+   "dst": "ENUM_ST_SEQ_AAD",
+   "label": "powers ready"
+  },
+  {
+   "src": "ENUM_ST_SEQ_AAD",
+   "dst": "ENUM_ST_SEQ_PY_CFG",
+   "label": "AAD done"
+  },
+  {
+   "src": "ENUM_ST_SEQ_AAD",
+   "dst": "ENUM_ST_SEQ_PAY",
+   "label": "AAD done pass 1"
+  },
+  {
+   "src": "ENUM_ST_SEQ_PY_CFG",
+   "dst": "ENUM_ST_SEQ_PAY",
+   "label": "core configured"
+  },
+  {
+   "src": "ENUM_ST_SEQ_PAY",
+   "dst": "ENUM_ST_SEQ_LEN",
+   "label": "payload done"
+  },
+  {
+   "src": "ENUM_ST_SEQ_PAY",
+   "dst": "ENUM_ST_SEQ_FIN",
+   "label": "legacy done"
+  },
+  {
+   "src": "ENUM_ST_SEQ_LEN",
+   "dst": "ENUM_ST_SEQ_TAG",
+   "label": "length absorbed"
+  },
+  {
+   "src": "ENUM_ST_SEQ_TAG",
+   "dst": "ENUM_ST_SEQ_FIN",
+   "label": "tag compared"
+  },
+  {
+   "src": "ENUM_ST_SEQ_FIN",
+   "dst": "ENUM_ST_SEQ_IDLE",
+   "label": "status accepted"
+  },
+  {
+   "src": "ENUM_ST_SEQ_SUSP",
+   "dst": "ENUM_ST_SEQ_FIN",
+   "label": "context saved"
+  },
+  {
+   "src": "ENUM_ST_SEQ_REST",
+   "dst": "ENUM_ST_SEQ_POW",
+   "label": "context restored"
+  },
+  {
+   "src": "ENUM_ST_SEQ_ABRT",
+   "dst": "ENUM_ST_SEQ_FIN",
+   "label": "cleanup done"
+  }
+ ],
+ "condition_aliases": [
+  {
+   "label": "new message",
+   "expression": "w_bundle_valid && !w_cmd_resume && w_cfg_legal"
+  },
+  {
+   "label": "resume",
+   "expression": "w_cmd_resume && w_slot_valid"
+  },
+  {
+   "label": "key ready GCM",
+   "expression": "w_key_ready && w_mode_gcm && (w_pass == 2'd0 || w_pass == 2'd1)"
+  },
+  {
+   "label": "key ready no setup",
+   "expression": "w_key_ready && (!w_mode_gcm || w_pass == 2'd2)"
+  },
+  {
+   "label": "core configured",
+   "expression": "i_core_cfg_valid && o_core_cfg_ready"
+  },
+  {
+   "label": "setup results",
+   "expression": "w_h_captured && w_ej0_captured"
+  },
+  {
+   "label": "powers ready",
+   "expression": "w_pow_done"
+  },
+  {
+   "label": "AAD done",
+   "expression": "w_aad_bytes_done && w_pass != 2'd1"
+  },
+  {
+   "label": "AAD done pass 1",
+   "expression": "w_aad_bytes_done && w_pass == 2'd1"
+  },
+  {
+   "label": "payload done",
+   "expression": "w_pay_bytes_done && w_core_drained && w_mode_gcm"
+  },
+  {
+   "label": "legacy done",
+   "expression": "w_pay_bytes_done && w_core_drained && !w_mode_gcm"
+  },
+  {
+   "label": "length absorbed",
+   "expression": "w_ghash_valid"
+  },
+  {
+   "label": "tag compared",
+   "expression": "w_tag_done"
+  },
+  {
+   "label": "status accepted",
+   "expression": "w_status_ack"
+  },
+  {
+   "label": "context saved",
+   "expression": "w_ctx_done"
+  },
+  {
+   "label": "context restored",
+   "expression": "w_ctx_done"
+  },
+  {
+   "label": "cleanup done",
+   "expression": "w_zero_done"
+  }
+ ],
+ "layout": {
+  "margin": 160
+ },
+ "global_overrides": [
+  {
+   "id": "G1",
+   "source": "ANY STATE except IDLE, FIN",
+   "destination": "ENUM_ST_SEQ_ABRT",
+   "expression": "w_cmd_abort || w_cmd_zeroize || w_fatal_err || w_keywait_expired",
+   "note": "Highest priority after reset. Fatal errors are LEN_ERR, CTR_EXHAUST, PROTO_ERR and KEY_ERR (side-load wait expired)."
+  },
+  {
+   "id": "G2",
+   "source": "AAD or PAY",
+   "destination": "ENUM_ST_SEQ_SUSP",
+   "expression": "w_cmd_suspend && w_block_boundary && w_core_drained && w_ctx_slots_en",
+   "note": "Lower priority than G1 and higher than the normal transitions of AAD and PAY."
+  }
+ ]
+}

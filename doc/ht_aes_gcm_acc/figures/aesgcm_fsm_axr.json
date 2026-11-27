@@ -1,0 +1,131 @@
+{
+  "page_name": "FSM_AXR",
+  "out_name": "aesgcm_fsm_axr.drawio",
+  "function": "AXI4 read window",
+  "initial": "ENUM_ST_AXR_IDLE",
+  "reset": {
+    "signal": "i_rst_n_bus",
+    "active_level": "low"
+  },
+  "states": [
+    {
+      "name": "ENUM_ST_AXR_IDLE",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_AXR_CHK",
+      "conditional_exit": false,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_AXR_DATA",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_AXR_DROP",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_AXR_END",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_AXR_IDLE",
+      "dst": "ENUM_ST_AXR_IDLE",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_AXR_DATA",
+      "dst": "ENUM_ST_AXR_DATA",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_AXR_DROP",
+      "dst": "ENUM_ST_AXR_DROP",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_AXR_IDLE",
+      "dst": "ENUM_ST_AXR_CHK",
+      "label": "address accepted"
+    },
+    {
+      "src": "ENUM_ST_AXR_CHK",
+      "dst": "ENUM_ST_AXR_DATA",
+      "label": "legal burst"
+    },
+    {
+      "src": "ENUM_ST_AXR_CHK",
+      "dst": "ENUM_ST_AXR_DROP",
+      "label": "illegal burst"
+    },
+    {
+      "src": "ENUM_ST_AXR_DATA",
+      "dst": "ENUM_ST_AXR_END",
+      "label": "last beat accepted"
+    },
+    {
+      "src": "ENUM_ST_AXR_DROP",
+      "dst": "ENUM_ST_AXR_END",
+      "label": "last beat accepted"
+    },
+    {
+      "src": "ENUM_ST_AXR_END",
+      "dst": "ENUM_ST_AXR_IDLE",
+      "label": "burst closed"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "address accepted",
+      "expression": "i_axi_arvalid && o_axi_arready"
+    },
+    {
+      "label": "legal burst",
+      "expression": "w_araddr_bit11 && w_burst_ok && w_size_ok"
+    },
+    {
+      "label": "illegal burst",
+      "expression": "!(w_araddr_bit11 && w_burst_ok && w_size_ok)"
+    },
+    {
+      "label": "last beat accepted",
+      "expression": "o_axi_rvalid && i_axi_rready && o_axi_rlast"
+    },
+    {
+      "label": "burst closed",
+      "expression": "1'b1"
+    }
+  ],
+  "layout": {
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_AXR_IDLE": [
+        1700,
+        480
+      ],
+      "ENUM_ST_AXR_CHK": [
+        740,
+        480
+      ],
+      "ENUM_ST_AXR_DATA": [
+        1220,
+        480
+      ],
+      "ENUM_ST_AXR_DROP": [
+        260,
+        480
+      ],
+      "ENUM_ST_AXR_END": [
+        740,
+        200
+      ]
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+ "head": {
+  "text": "WF-008 AXI4 read burst of 4 beats from the output window (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p..............."
+  },
+  {
+   "name": "i_axi_arvalid",
+   "wave": "01.0............"
+  },
+  {
+   "name": "o_axi_arready",
+   "wave": "0.10............"
+  },
+  {
+   "name": "i_axi_arlen_burst",
+   "wave": "x=..............",
+   "data": [
+    "len 3, INCR"
+   ]
+  },
+  {
+   "name": "o_axi_rvalid",
+   "wave": "0....1...01.0..."
+  },
+  {
+   "name": "i_axi_rready",
+   "wave": "0..1............"
+  },
+  {
+   "name": "o_axi_rdata",
+   "wave": "x....====.......",
+   "data": [
+    "D0",
+    "D1",
+    "D2",
+    "D3"
+   ]
+  },
+  {
+   "name": "o_axi_rlast",
+   "wave": "0.......10......"
+  },
+  {
+   "name": "fifo_pop",
+   "wave": "0....1...0......"
+  }
+ ],
+ "foot": {
+  "text": "rvalid waits until the output FIFO holds a beat; four beats are popped and rlast marks the last one."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

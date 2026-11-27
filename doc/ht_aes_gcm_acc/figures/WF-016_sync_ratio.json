@@ -1,0 +1,37 @@
+{
+ "head": {
+  "text": "WF-016 CDC-001 in synchronous mode with bus:core clock ratio 2:3 (24-unit grid)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "111000111000111000111000"
+  },
+  {
+   "name": "i_clk_core",
+   "wave": "110011001100110011001100"
+  },
+  {
+   "name": "bundle_req_bus",
+   "wave": "0...1...........0......."
+  },
+  {
+   "name": "req_cap_core",
+   "wave": "0.......1...........0..."
+  },
+  {
+   "name": "ack_core",
+   "wave": "0...........1..........."
+  },
+  {
+   "name": "ack_seen_bus",
+   "wave": "0.................1....."
+  }
+ ],
+ "foot": {
+  "text": "Request is launched on a bus edge, captured on the next core edge after it is stable, acknowledged by the core, and seen by the bus; no synchronizer flop is used. Illustrative of one fixed phase relation."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "head": {
+  "text": "WF-010 PIO write while the input FIFO is full: word dropped, PROTO_ERR (BUS clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_bus",
+   "wave": "p............."
+  },
+  {
+   "name": "o_reg_wr_en",
+   "wave": "0..10.10......"
+  },
+  {
+   "name": "o_reg_wr_addr",
+   "wave": "x..==.=.......",
+   "data": [
+    "din",
+    "x",
+    "din"
+   ]
+  },
+  {
+   "name": "fifo_in_full",
+   "wave": "0....1........"
+  },
+  {
+   "name": "fifo_push",
+   "wave": "0..10........."
+  },
+  {
+   "name": "irq_raw_perr",
+   "wave": "0.......1....."
+  }
+ ],
+ "foot": {
+  "text": "The first write is pushed; the second arrives while the FIFO is full, is dropped and raises PROTO_ERR."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

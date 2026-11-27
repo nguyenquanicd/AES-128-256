@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FSM: AXI4 read window</title>
+  <style>body{font:16px system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#111}svg{max-width:100%;height:auto}a{color:#1457a6}</style>
+</head>
+<body>
+  <h1>FSM: AXI4 read window</h1>
+  <p>Initial state: <code>ENUM_ST_AXR_IDLE</code></p>
+  <p>Reset entry: <code>i_rst_n_bus</code> active-low.</p>
+  <figure><svg xmlns="http://www.w3.org/2000/svg" width="2136" height="604.926" viewBox="-78 120.292 2136 604.926" font-family="Arial, Helvetica, sans-serif" font-size="18">
+<rect x="-78" y="120.292" width="2136" height="604.926" fill="#FFFFFF"/>
+<ellipse cx="1710" cy="460" rx="110" ry="40" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1710" y="467" text-anchor="middle">ENUM_ST_AXR_IDLE</text>
+<ellipse cx="750" cy="460" rx="105" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="750" y="467" text-anchor="middle">ENUM_ST_AXR_CHK</text>
+<ellipse cx="1230" cy="460" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="1230" y="467" text-anchor="middle">ENUM_ST_AXR_DATA</text>
+<ellipse cx="270" cy="460" rx="110" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="270" y="467" text-anchor="middle">ENUM_ST_AXR_DROP</text>
+<ellipse cx="750" cy="180" rx="105" ry="20" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+<text x="750" y="187" text-anchor="middle">ENUM_ST_AXR_END</text>
+<path d="M 1710 320 L 1710 322.416 L 1710 325.44 L 1710 328.984 L 1710 332.963 L 1710 337.289 L 1710 341.875 L 1710 346.635 L 1710 351.481 L 1710 356.328 L 1710 361.088 L 1710 365.674 L 1710 370 L 1710 374.326 L 1710 378.912 L 1710 383.672 L 1710 388.519 L 1710 393.365 L 1710 398.125 L 1710 402.711 L 1710 407.037 L 1710 411.016 L 1710 414.56 L 1710 417.584 L 1710 420" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1710,420 1704,408 1716,408" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1611.95" y="356" width="196.1" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1710" y="377" text-anchor="middle">i_rst_n_bus == 1'b0</text>
+<path d="M 807.413 196.745 L 826.458 204.864 L 850.181 215.405 L 877.94 227.936 L 909.091 242.027 L 942.99 257.244 L 978.994 273.158 L 1016.46 289.334 L 1054.75 305.343 L 1093.2 320.751 L 1131.2 335.128 L 1168.08 348.041 L 1203.2 359.059 L 1238.74 368.652 L 1276.78 377.59 L 1316.54 385.892 L 1357.26 393.575 L 1398.14 400.659 L 1438.43 407.16 L 1477.35 413.099 L 1514.11 418.491 L 1547.95 423.357 L 1578.1 427.713 L 1603.77 431.579 L 1624.19 434.973" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1624.19,434.973 1611.37,438.925 1613.34,427.087" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1145.01" y="325.751" width="126.8" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1208.41" y="346.751" text-anchor="middle">burst closed</text>
+<path d="M 1710 500 L 1713.06 508.241 L 1721.11 519.259 L 1732.5 532.5 L 1745.56 547.407 L 1758.61 563.426 L 1770 580 L 1778.06 596.574 L 1781.11 612.593 L 1777.5 627.5 L 1765.56 640.741 L 1743.61 651.759 L 1710 660 L 1660.56 666.175 L 1594.44 671.343 L 1515 675.469 L 1425.56 678.519 L 1329.44 680.457 L 1230 681.25 L 1130.56 680.862 L 1034.44 679.259 L 945 676.406 L 865.556 672.269 L 799.444 666.811 L 750 660 L 716.389 650.729 L 694.444 638.333 L 682.5 623.438 L 678.889 606.667 L 681.944 588.646 L 690 570 L 701.389 551.354 L 714.444 533.333 L 727.5 516.562 L 738.889 501.667 L 746.944 489.271 L 750 480" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="750,480 751.942,493.275 740.545,489.519" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="1138.76" y="667.219" width="166.4" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="1221.96" y="688.219" text-anchor="middle">address accepted</text>
+<path d="M 1230 440 L 1231.53 436.91 L 1235.56 432.778 L 1241.25 427.812 L 1247.78 422.222 L 1254.31 416.215 L 1260 410 L 1264.03 403.785 L 1265.56 397.778 L 1263.75 392.188 L 1257.78 387.222 L 1246.81 383.09 L 1230 380 L 1205.28 378.472 L 1172.22 378.611 L 1132.5 380 L 1087.78 382.222 L 1039.72 384.861 L 990 387.5 L 940.278 389.722 L 892.222 391.111 L 847.5 391.25 L 807.778 389.722 L 774.722 386.111 L 750 380 L 733.194 370.729 L 722.222 358.333 L 716.25 343.438 L 714.444 326.667 L 715.972 308.646 L 720 290 L 725.694 271.354 L 732.222 253.333 L 738.75 236.562 L 744.444 221.667 L 748.472 209.271 L 750 200" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="750,200 753.969,212.816 742.129,210.865" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="845.497" y="375.771" width="186.2" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="938.597" y="396.771" text-anchor="middle">last beat accepted</text>
+<path d="M 270 440 L 268.806 426.609 L 265.66 408.704 L 261.211 387.188 L 256.111 362.963 L 251.011 336.933 L 246.562 310 L 243.416 283.067 L 242.222 257.037 L 243.633 232.812 L 248.299 211.296 L 256.871 193.391 L 270 180 L 289.314 170.897 L 315.139 164.954 L 346.172 161.719 L 381.111 160.741 L 418.655 161.568 L 457.5 163.75 L 496.345 166.834 L 533.889 170.37 L 568.828 173.906 L 599.861 176.991 L 625.686 179.172 L 645 180" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="645,180 632.754,185.481 633.268,173.492" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="228.383" y="150.292" width="186.2" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="321.483" y="171.292" text-anchor="middle">last beat accepted</text>
+<path d="M 645 460 L 638.597 466.016 L 630.584 474.514 L 621.191 484.922 L 610.648 496.667 L 599.185 509.175 L 587.031 521.875 L 574.418 534.193 L 561.574 545.556 L 548.73 555.391 L 536.117 563.125 L 523.963 568.186 L 512.5 570 L 501.037 568.186 L 488.883 563.125 L 476.27 555.391 L 463.426 545.556 L 450.582 534.193 L 437.969 521.875 L 425.815 509.175 L 414.352 496.667 L 403.809 484.922 L 394.416 474.514 L 386.403 466.016 L 380 460" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="380,460 392.854,463.844 384.637,472.59" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="444.15" y="556" width="136.7" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="512.5" y="577" text-anchor="middle">illegal burst</text>
+<path d="M 855 460 L 861.539 460 L 869.745 460 L 879.375 460 L 890.185 460 L 901.933 460 L 914.375 460 L 927.269 460 L 940.37 460 L 953.438 460 L 966.227 460 L 978.495 460 L 990 460 L 1001.42 460 L 1013.46 460 L 1025.9 460 L 1038.52 460 L 1051.1 460 L 1063.44 460 L 1075.3 460 L 1086.48 460 L 1096.76 460 L 1105.91 460 L 1113.73 460 L 1120 460" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1120,460 1108,466 1108,454" fill="#000000" stroke="#000000" stroke-width="1"/>
+<rect x="929.05" y="446" width="116.9" height="28" fill="#FFFFFF" stroke="none"/>
+<text x="987.5" y="467" text-anchor="middle">legal burst</text>
+<path d="M 1776 428 L 1787.54 427.796 L 1802.96 427.259 L 1821.5 426.5 L 1842.37 425.63 L 1864.8 424.759 L 1888 424 L 1911.2 423.463 L 1933.63 423.259 L 1954.5 423.5 L 1973.04 424.296 L 1988.46 425.759 L 2000 428 L 2008.56 431.296 L 2015.56 435.704 L 2021 441 L 2024.89 446.963 L 2027.22 453.37 L 2028 460 L 2027.22 466.63 L 2024.89 473.037 L 2021 479 L 2015.56 484.296 L 2008.56 488.704 L 2000 492 L 1988.46 494.241 L 1973.04 495.704 L 1954.5 496.5 L 1933.63 496.741 L 1911.2 496.537 L 1888 496 L 1864.8 495.241 L 1842.37 494.37 L 1821.5 493.5 L 1802.96 492.741 L 1787.54 492.204 L 1776 492" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1776,492 1788.1,486.213 1787.89,498.211" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 1296 444 L 1307.54 443.898 L 1322.96 443.63 L 1341.5 443.25 L 1362.37 442.815 L 1384.8 442.38 L 1408 442 L 1431.2 441.731 L 1453.63 441.63 L 1474.5 441.75 L 1493.04 442.148 L 1508.46 442.88 L 1520 444 L 1528.56 445.648 L 1535.56 447.852 L 1541 450.5 L 1544.89 453.481 L 1547.22 456.685 L 1548 460 L 1547.22 463.315 L 1544.89 466.519 L 1541 469.5 L 1535.56 472.148 L 1528.56 474.352 L 1520 476 L 1508.46 477.12 L 1493.04 477.852 L 1474.5 478.25 L 1453.63 478.37 L 1431.2 478.269 L 1408 478 L 1384.8 477.62 L 1362.37 477.185 L 1341.5 476.75 L 1322.96 476.37 L 1307.54 476.102 L 1296 476" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="1296,476 1308.05,470.106 1307.95,482.106" fill="#000000" stroke="#000000" stroke-width="1"/>
+<path d="M 204 444 L 192.463 443.898 L 177.037 443.63 L 158.5 443.25 L 137.63 442.815 L 115.204 442.38 L 92 442 L 68.7963 441.731 L 46.3704 441.63 L 25.5 441.75 L 6.96296 442.148 L -8.46296 442.88 L -20 444 L -28.5556 445.648 L -35.5556 447.852 L -41 450.5 L -44.8889 453.481 L -47.2222 456.685 L -48 460 L -47.2222 463.315 L -44.8889 466.519 L -41 469.5 L -35.5556 472.148 L -28.5556 474.352 L -20 476 L -8.46296 477.12 L 6.96296 477.852 L 25.5 478.25 L 46.3704 478.37 L 68.7963 478.269 L 92 478 L 115.204 477.62 L 137.63 477.185 L 158.5 476.75 L 177.037 476.37 L 192.463 476.102 L 204 476" fill="none" stroke="#000000" stroke-width="2.0"/>
+<polygon points="204,476 192.053,482.106 191.948,470.106" fill="#000000" stroke="#000000" stroke-width="1"/>
+</svg>
+<figcaption>Editable source: <a href="aesgcm_fsm_axr.drawio">AXI4 read window.drawio</a> | <a href="aesgcm_fsm_axr.json">AXI4 read window.json</a></figcaption></figure>
+  <section><h2>Transition and Global State Control Mapping</h2><table><thead><tr><th>Kind</th><th>Label / effect</th><th>Boolean expression</th></tr></thead><tbody>
+    <tr><td>Transition</td><td>address accepted</td><td><code>i_axi_arvalid &amp;&amp; o_axi_arready</code></td></tr>
+    <tr><td>Transition</td><td>legal burst</td><td><code>w_araddr_bit11 &amp;&amp; w_burst_ok &amp;&amp; w_size_ok</code></td></tr>
+    <tr><td>Transition</td><td>illegal burst</td><td><code>!(w_araddr_bit11 &amp;&amp; w_burst_ok &amp;&amp; w_size_ok)</code></td></tr>
+    <tr><td>Transition</td><td>last beat accepted</td><td><code>o_axi_rvalid &amp;&amp; i_axi_rready &amp;&amp; o_axi_rlast</code></td></tr>
+    <tr><td>Transition</td><td>burst closed</td><td><code>1&#x27;b1</code></td></tr>
+  </tbody></table></section>
+</body>
+</html>

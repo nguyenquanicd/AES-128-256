@@ -1,0 +1,898 @@
+{
+ "module": "m_vlsit_csr_aesgcm",
+ "prefix": "aesgcm",
+ "async": 0,
+ "event_sideband": 1,
+ "ip_version": {
+  "major": 1,
+  "minor": 0
+ },
+ "registers": [
+  {
+   "name": "aesgcm_version",
+   "offset": "0x0",
+   "description": "AES-GCM accelerator version register. Reports the IP major and minor version numbers.",
+   "fields": [
+    {
+     "name": "major",
+     "bits": "[31:16]",
+     "type": "ro",
+     "reset": "0x1",
+     "description": "Major version number of the AES-GCM accelerator. Software reads it to select a compatible driver.\n\nUsage: Read after reset; software never writes this field.\n\nValues:\n0x1 major version 1 (reset value).\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "minor",
+     "bits": "[15:0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Minor version number of the AES-GCM accelerator. Software reads it to detect compatible additions.\n\nUsage: Read after reset; software never writes this field.\n\nValues:\n0x0 minor version 0 (reset value).\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_cap",
+   "offset": "0x4",
+   "description": "AES-GCM capability register. Reports the elaboration parameters of this instance.",
+   "fields": [
+    {
+     "name": "gcm_en",
+     "bits": "[0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "GCM supported flag. Reads 1 when the instance was built with PARA_AES_GCM_EN equal to 1.\n\nUsage: Read before selecting mode 5 in aesgcm_cfg.mode; the status reflects the build, not a run-time state.\n\nValues:\n0x0 GCM not built (reset value);\n0x1 GCM built.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "axi_en",
+     "bits": "[1]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "AXI4 data window present flag. Reads 1 for the wrapper m_aesgcm_acc_axi_top.\n\nUsage: Read before selecting aesgcm_cfg.dat_src equal to 0.\n\nValues:\n0x0 no AXI4 window (reset value);\n0x1 AXI4 window present.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "key_side",
+     "bits": "[2]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Key side-load supported flag. Reads 1 when PARA_KEY_SIDE_EN equals 1.\n\nUsage: Read before selecting aesgcm_cfg.key_src equal to 1.\n\nValues:\n0x0 side-load not built (reset value);\n0x1 side-load built.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "async",
+     "bits": "[3]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Asynchronous clock domain flag. Reads the value of PARA_CLK_ASYNC.\n\nUsage: Read to learn the crossing structure that the instance uses.\n\nValues:\n0x0 synchronous related clocks (reset value);\n0x1 asynchronous clocks.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "policy",
+     "bits": "[5:4]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Release policy built into the instance. Reads the value of PARA_GCM_REL_POLICY.\n\nUsage: Read before selecting aesgcm_cfg.gcm_pass for decryption.\n\nValues:\n0x0 policy A only, verify then decrypt (reset value);\n0x1 policy C only, release and flag;\n0x2 both selectable;\n0x3 reserved.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "ctx_exp",
+     "bits": "[6]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Context export flag. Reads the value of PARA_GCM_CTX_MODE.\n\nUsage: Read before using the aesgcm_ctxx registers.\n\nValues:\n0x0 internal context slots (reset value);\n0x1 context export through registers.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "ctx_num",
+     "bits": "[10:8]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Number of internal context slots. Reads the value of PARA_GCM_CTX_NUM.\n\nUsage: Read before using suspend and resume.\n\nValues:\n0x0 to 0x4 number of slots (reset value 0x0).\n\nUnit: slots.\n\nLimits: 0x0 to 0x4."
+    },
+    {
+     "name": "lanes",
+     "bits": "[14:12]",
+     "type": "ro",
+     "reset": "0x1",
+     "description": "Number of AES block lanes of the AES core. Reads the value of PARA_AES_LANE_NUM.\n\nUsage: Read to size driver buffers and throughput expectations.\n\nValues:\n0x1 to 0x4 lanes (reset value 0x1).\n\nUnit: lanes.\n\nLimits: 0x1 to 0x4."
+    },
+    {
+     "name": "ghash",
+     "bits": "[17:16]",
+     "type": "ro",
+     "reset": "0x1",
+     "description": "GHASH architecture of the instance. Reads the value of PARA_GHASH_ARCH.\n\nUsage: Read to estimate the GCM throughput.\n\nValues:\n0x0 digit-serial;\n0x1 single parallel multiplier (reset value);\n0x2 aggregated parallel multipliers;\n0x3 reserved.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "axi_dw",
+     "bits": "[21:20]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "AXI4 data width code of the data window. Reads the code of PARA_AXI_DATA_W.\n\nUsage: Read before programming the DMA controller beat size.\n\nValues:\n0x0 32 bit (reset value);\n0x1 64 bit;\n0x2 128 bit;\n0x3 reserved.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_ctrl",
+   "offset": "0x8",
+   "description": "AES-GCM control register. Enables the accelerator and issues commands to the message sequencer.",
+   "fields": [
+    {
+     "name": "start",
+     "bits": "[0]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "Start message command. Software sets it to start the message described by the configuration registers; hardware clears it when the configuration bundle is accepted by the core domain.\n\nUsage: Write 1 after aesgcm_en is 1 and all configuration registers are programmed; do not rewrite while it reads 1. Hardware clears it, or software reads 0 as the accepted indication.\n\nValues:\n0x0 no start (reset value);\n0x1 start requested.\n\nUnit: none.\n\nLimits: Write only while aesgcm_sts.busy is 0."
+    },
+    {
+     "name": "abort",
+     "bits": "[1]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "Abort message command. Software sets it to stop the active message; hardware clears it when the sequencer has returned to idle.\n\nUsage: Write 1 at any time; abort has priority over start in the same access. The input FIFO and output FIFO are flushed and key stores stay loaded.\n\nValues:\n0x0 no abort (reset value);\n0x1 abort requested.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "zeroize",
+     "bits": "[2]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "Zeroize command. Software sets it to clear every key store, context slot, intermediate GCM value and the AES core; hardware clears it when the clear is complete.\n\nUsage: Write 1 after every message that must not leave key material behind, and after a reset of only one clock domain. Completion is reported by aesgcm_sts.zeroized.\n\nValues:\n0x0 no zeroize (reset value);\n0x1 zeroize requested.\n\nUnit: none.\n\nLimits: Completes within 64 core clocks."
+    },
+    {
+     "name": "suspend",
+     "bits": "[3]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "Suspend message command. Software sets it to stop the active GCM message at a block boundary and save its context in the slot selected by aesgcm_cfg.ctx_id.\n\nUsage: Write 1 while aesgcm_sts.busy is 1 and the message is in the AAD or payload phase; hardware clears it when the context is saved.\n\nValues:\n0x0 no suspend (reset value);\n0x1 suspend requested.\n\nUnit: none.\n\nLimits: Requires PARA_GCM_CTX_NUM greater than 0."
+    },
+    {
+     "name": "resume",
+     "bits": "[4]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "Resume message command. Software sets it to restore the context of slot aesgcm_cfg.ctx_id and continue its message.\n\nUsage: Write 1 while aesgcm_sts.busy is 0 and the selected slot is valid in aesgcm_sts.ctx_vld; hardware clears it when the context is restored.\n\nValues:\n0x0 no resume (reset value);\n0x1 resume requested.\n\nUnit: none.\n\nLimits: Requires PARA_GCM_CTX_NUM greater than 0."
+    },
+    {
+     "name": "key_new",
+     "bits": "[5]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "New key declaration. Software sets it after loading a new key to latch the tag length of that key and to invalidate any verified context.\n\nUsage: Write 1 after the last write to the aesgcm_key registers (or after the side-loaded key changes) and before the first start with that key; hardware clears it when the tag length is latched.\n\nValues:\n0x0 no new key (reset value);\n0x1 new key declared.\n\nUnit: none.\n\nLimits: A different aesgcm_cfg.tag_len before the next key_new raises the configuration error event."
+    },
+    {
+     "name": "free",
+     "bits": "[6]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "Free context slot command. Software sets it to clear the context slot selected by aesgcm_cfg.ctx_id.\n\nUsage: Write 1 while the accelerator is idle; hardware clears it when the slot is cleared.\n\nValues:\n0x0 no free (reset value);\n0x1 free requested.\n\nUnit: none.\n\nLimits: Requires PARA_GCM_CTX_NUM greater than 0."
+    },
+    {
+     "name": "en",
+     "bits": "[8]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Accelerator enable. Software sets it to allow messages; clearing it while idle holds the sequencer in idle.\n\nUsage: Set once after reset before the first start; clear to block new messages. Do not clear while aesgcm_sts.busy is 1.\n\nValues:\n0x0 disabled (reset value);\n0x1 enabled.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_cfg",
+   "offset": "0xC",
+   "description": "AES-GCM configuration register. Selects mode, direction, key source, data path and per-message options.",
+   "fields": [
+    {
+     "name": "mode",
+     "bits": "[2:0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Cipher mode. Selects ECB, CBC, CFB, OFB, CTR or GCM for the next message.\n\nUsage: Program before start; use 0x5 only when aesgcm_cap.gcm_en reads 1.\n\nValues:\n0x0 ECB (reset value);\n0x1 CBC;\n0x2 CFB;\n0x3 OFB;\n0x4 CTR;\n0x5 GCM;\n0x6 to 0x7 reserved.\n\nUnit: none.\n\nLimits: Values 0x6 and 0x7 raise the configuration error event."
+    },
+    {
+     "name": "decipher",
+     "bits": "[3]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Direction. Selects encryption or decryption for the next message.\n\nUsage: Program before start; for GCM it selects authenticated encryption or authenticated decryption.\n\nValues:\n0x0 encrypt (reset value);\n0x1 decrypt.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "key_size",
+     "bits": "[4]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Key size. Selects AES-128 or AES-256 for a key written by software; ignored for a side-loaded key whose size comes from the key manager.\n\nUsage: Program before start; with aesgcm_cfg.key_src equal to 0 the first 4 (AES-128) or 8 (AES-256) aesgcm_key registers are used.\n\nValues:\n0x0 AES-128 (reset value);\n0x1 AES-256.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "key_src",
+     "bits": "[5]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Key source. Selects the aesgcm_key registers or the key side-load port.\n\nUsage: Program before start; 0x1 requires aesgcm_cap.key_side equal to 1.\n\nValues:\n0x0 aesgcm_key registers (reset value);\n0x1 side-load port.\n\nUnit: none.\n\nLimits: 0x1 with no side-load raises the key error event."
+    },
+    {
+     "name": "dat_src",
+     "bits": "[6]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Data path. Selects the AXI4 data window or the APB programmed-I/O registers for the next message.\n\nUsage: Program before start; 0x0 requires aesgcm_cap.axi_en equal to 1.\n\nValues:\n0x0 AXI4 window (reset value);\n0x1 APB programmed I/O.\n\nUnit: none.\n\nLimits: 0x0 on the APB wrapper raises the configuration error event."
+    },
+    {
+     "name": "gcm_pass",
+     "bits": "[8:7]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "GCM pass. Selects single-pass processing or the pass of the verify-then-decrypt policy.\n\nUsage: Program before start in GCM mode: 0x0 for encryption or policy C decryption, 0x1 for pass 1, 0x2 for pass 2 after aesgcm_sts.ver_ok reads 1.\n\nValues:\n0x0 single pass (reset value);\n0x1 policy A pass 1, verify only;\n0x2 policy A pass 2, decrypt;\n0x3 reserved.\n\nUnit: none.\n\nLimits: 0x1 and 0x2 require decryption; 0x0 with decryption requires policy C and aesgcm_sts.sec_only equal to 0."
+    },
+    {
+     "name": "cfb_seg",
+     "bits": "[12:9]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "CFB segment size code. Selects the CFB segment size for mode 2.\n\nUsage: Program before start when aesgcm_cfg.mode equals 2.\n\nValues:\n0x0 1 bit (reset value);\n0x1 2 bits;\n0x2 4 bits;\n0x3 8 bits;\n0x4 16 bits;\n0x5 32 bits;\n0x6 64 bits;\n0x7 128 bits;\n0x8 to 0xF reserved.\n\nUnit: bit.\n\nLimits: 0x8 to 0xF raise the configuration error event."
+    },
+    {
+     "name": "tag_len",
+     "bits": "[15:13]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "GCM tag length code. Selects the number of leading tag bits that are produced or compared.\n\nUsage: Program before start in GCM mode; the value is latched at aesgcm_ctrl.key_new and shall not change for the same key.\n\nValues:\n0x0 128 bits (reset value);\n0x1 120 bits;\n0x2 112 bits;\n0x3 104 bits;\n0x4 96 bits;\n0x5 to 0x7 reserved.\n\nUnit: bit.\n\nLimits: 0x5 to 0x7 raise the configuration error event."
+    },
+    {
+     "name": "ctx_id",
+     "bits": "[17:16]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Context slot identifier. Selects the slot used by suspend, resume and free.\n\nUsage: Program before writing aesgcm_ctrl.suspend, resume or free.\n\nValues:\n0x0 to 0x3 slot number (reset value 0x0).\n\nUnit: none.\n\nLimits: Value must be below aesgcm_cap.ctx_num."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_aadlen",
+   "offset": "0x10",
+   "description": "AES-GCM additional authenticated data length register. Holds the AAD length of the next message.",
+   "fields": [
+    {
+     "name": "len",
+     "bits": "[31:0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "AAD length in bytes. Number of AAD bytes of the next GCM message at the start of the input stream.\n\nUsage: Program before start; use 0 for legacy modes and for policy A pass 2.\n\nValues:\n0x00000000 to 0xFFFFFFFF byte count (reset value 0x0).\n\nUnit: byte.\n\nLimits: 0x0 to 0xFFFFFFFF."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_datalen",
+   "offset": "0x14",
+   "description": "AES-GCM payload length register. Holds the payload length of the next message.",
+   "fields": [
+    {
+     "name": "len",
+     "bits": "[31:0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Payload length in bytes. Number of plaintext or ciphertext bytes of the next message.\n\nUsage: Program before start; 0 gives GMAC in GCM mode.\n\nValues:\n0x00000000 to 0xFFFFFFFF byte count (reset value 0x0).\n\nUnit: byte.\n\nLimits: 0x0 to 0xFFFFFFFF; CBC, ECB multiples of 16 for legacy modes."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_keywait",
+   "offset": "0x18",
+   "description": "AES-GCM key wait register. Holds the side-load time-out of the sequencer.",
+   "fields": [
+    {
+     "name": "clks",
+     "bits": "[15:0]",
+     "type": "rw",
+     "reset": "0x100",
+     "description": "Side-load wait time in core clocks. Time that the sequencer waits for i_key_side_valid before it raises the key error event.\n\nUsage: Program before start when aesgcm_cfg.key_src equals 1.\n\nValues:\n0x0001 to 0xFFFF clocks (reset value 0x100).\n\nUnit: core clock.\n\nLimits: 0x0001 to 0xFFFF; 0x0 means no wait."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_key",
+   "offset": "0x20",
+   "description": "AES-GCM key word register. Write-only key word, four bytes of the key.",
+   "fields": [
+    {
+     "name": "key",
+     "bits": "[31:0]",
+     "type": "wo",
+     "reset": "0x0",
+     "description": "Key word. Four key bytes with byte 4k in bits [7:0]; reads return zero and the hardware clears it on zeroize.\n\nUsage: Write words 0 to 3 for AES-128 or 0 to 7 for AES-256 before start and then write aesgcm_ctrl.key_new; software cannot read the key back.\n\nValues:\n0x00000000 to 0xFFFFFFFF key word (reset value 0x0).\n\nUnit: none.\n\nLimits: Only used when aesgcm_cfg.key_src equals 0."
+    }
+   ],
+   "repeat": {
+    "mode": "FIXED",
+    "count": 8,
+    "stride": "0x4"
+   }
+  },
+  {
+   "name": "aesgcm_iv",
+   "offset": "0x40",
+   "description": "AES-GCM initialization vector word register. Four bytes of the IV or counter block.",
+   "fields": [
+    {
+     "name": "iv",
+     "bits": "[31:0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Initialization vector word. Four IV bytes with byte 4k in bits [7:0]; GCM uses words 0 to 2 (96 bits), legacy modes words 0 to 3.\n\nUsage: Program before start; software shall never reuse an IV with the same key in GCM (SP 800-38D 8).\n\nValues:\n0x00000000 to 0xFFFFFFFF IV word (reset value 0x0).\n\nUnit: none.\n\nLimits: none."
+    }
+   ],
+   "repeat": {
+    "mode": "FIXED",
+    "count": 4,
+    "stride": "0x4"
+   }
+  },
+  {
+   "name": "aesgcm_tagin",
+   "offset": "0x50",
+   "description": "AES-GCM expected tag word register. Four bytes of the tag to verify.",
+   "fields": [
+    {
+     "name": "tag",
+     "bits": "[31:0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Expected tag word. Four tag bytes with byte 4k in bits [7:0]; byte 0 is the leftmost tag byte; only the leading tag_len bits are compared.\n\nUsage: Program before starting a GCM decryption (pass 1, pass 2 or policy C).\n\nValues:\n0x00000000 to 0xFFFFFFFF tag word (reset value 0x0).\n\nUnit: none.\n\nLimits: none."
+    }
+   ],
+   "repeat": {
+    "mode": "FIXED",
+    "count": 4,
+    "stride": "0x4"
+   }
+  },
+  {
+   "name": "aesgcm_tagout",
+   "offset": "0x60",
+   "description": "AES-GCM computed tag word register. Four bytes of the computed tag.",
+   "fields": [
+    {
+     "name": "tag",
+     "bits": "[31:0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Computed tag word. Four bytes of the full 128-bit tag T with byte 4k in bits [7:0]; software uses the leading tag_len bits.\n\nUsage: Read after the DONE event of an encryption, pass 1 or policy C message.\n\nValues:\n0x00000000 to 0xFFFFFFFF tag word (reset value 0x0).\n\nUnit: none.\n\nLimits: none."
+    }
+   ],
+   "repeat": {
+    "mode": "FIXED",
+    "count": 4,
+    "stride": "0x4"
+   }
+  },
+  {
+   "name": "aesgcm_sts",
+   "offset": "0x70",
+   "description": "AES-GCM status register. Reports sequencer state and message results.",
+   "fields": [
+    {
+     "name": "busy",
+     "bits": "[0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Message active flag. Reads 1 from start acceptance until the message ends or is suspended.\n\nUsage: Poll before changing configuration registers.\n\nValues:\n0x0 idle (reset value);\n0x1 message active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "tag_ok",
+     "bits": "[1]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Tag comparison result of the last decryption message or pass.\n\nUsage: Read after the DONE event; valid until the next start.\n\nValues:\n0x0 tag mismatch or not compared (reset value);\n0x1 tag matched.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "ver_ok",
+     "bits": "[2]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Verified-context flag of policy A. Reads 1 after pass 1 matched and until the next start, key_new or zeroize.\n\nUsage: Check before starting pass 2.\n\nValues:\n0x0 no verified context (reset value);\n0x1 context verified.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "zeroized",
+     "bits": "[3]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Zeroize complete flag. Reads 1 after aesgcm_ctrl.zeroize completed, until the next start.\n\nUsage: Poll after writing aesgcm_ctrl.zeroize.\n\nValues:\n0x0 not zeroized (reset value);\n0x1 zeroize complete.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "sec_only",
+     "bits": "[4]",
+     "type": "ro",
+     "reset": "0x1",
+     "description": "Secure-only flag. Reads the resynchronized value of the pin i_gcm_secure_only.\n\nUsage: Read to know whether policy C and context export are blocked.\n\nValues:\n0x0 policy C allowed;\n0x1 policy A forced (reset value).\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "key_ld",
+     "bits": "[5]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Key store valid flag. Reads 1 while the core domain holds a key.\n\nUsage: Check before start with a key written earlier.\n\nValues:\n0x0 no key (reset value);\n0x1 key held.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "phase",
+     "bits": "[11:8]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Sequencer phase. Encoded state of the message sequencer for diagnostics.\n\nUsage: Read for debugging only; the encoding follows the state order of section 10.1.\n\nValues:\n0x0 idle (reset value);\n0x1 to 0xD other states;\n0xE aborting;\n0xF reserved.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "ctx_vld",
+     "bits": "[19:16]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Context slot valid mask. Bit i is 1 while slot i holds a suspended context.\n\nUsage: Read before resume.\n\nValues:\n0x0 no slot valid (reset value);\n0x1 to 0xF valid slots mask.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_fifosts",
+   "offset": "0x74",
+   "description": "AES-GCM FIFO status register. Reports whether the input path can take data and the output path holds data.",
+   "fields": [
+    {
+     "name": "in_full",
+     "bits": "[9]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Input FIFO full flag. Reads 1 when the input FIFO cannot take a further entry.\n\nUsage: Do not write the PIO data register while it reads 1.\n\nValues:\n0x0 room available (reset value);\n0x1 full.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "out_empty",
+     "bits": "[26]",
+     "type": "ro",
+     "reset": "0x1",
+     "description": "Output data empty flag. Reads 1 when neither the output FIFO nor the bus-side unpacker holds data.\n\nUsage: Do not read the PIO data register while it reads 1.\n\nValues:\n0x0 data available;\n0x1 empty (reset value).\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_irq_raw",
+   "offset": "0x80",
+   "description": "AES-GCM raw interrupt register. Holds the sticky event causes.",
+   "fields": [
+    {
+     "name": "done",
+     "bits": "[0]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "DONE raw event. Message or pass finished. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "tagf",
+     "bits": "[1]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "TAG_FAIL raw event. Tag comparison failed. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cerr",
+     "bits": "[2]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "CFG_ERR raw event. Illegal configuration at start. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "lerr",
+     "bits": "[3]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "LEN_ERR raw event. Length error. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cexh",
+     "bits": "[4]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "CTR_EXHAUST raw event. AES core counter error. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dinr",
+     "bits": "[5]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "DMA_IN_RDY raw event. Input FIFO has room for a burst. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dour",
+     "bits": "[6]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "DMA_OUT_RDY raw event. Output FIFO holds a burst. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cswd",
+     "bits": "[7]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "CTX_SWITCH_DONE raw event. Suspend or resume finished. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "kerr",
+     "bits": "[8]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "KEY_ERR raw event. Key source error. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "perr",
+     "bits": "[9]",
+     "type": "w1c",
+     "reset": "0x0",
+     "description": "PROTO_ERR raw event. Protocol misuse. Hardware sets it, software clears it by writing 1.\n\nUsage: Write 1 to clear after servicing; hardware sets it again for a new event; a set and a clear in the same cycle keep the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_irq_en",
+   "offset": "0x84",
+   "description": "AES-GCM interrupt enable register. Selects which causes drive the interrupt.",
+   "fields": [
+    {
+     "name": "done",
+     "bits": "[0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "DONE interrupt enable. Lets the raw event DONE reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "tagf",
+     "bits": "[1]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "TAG_FAIL interrupt enable. Lets the raw event TAG_FAIL reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cerr",
+     "bits": "[2]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "CFG_ERR interrupt enable. Lets the raw event CFG_ERR reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "lerr",
+     "bits": "[3]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "LEN_ERR interrupt enable. Lets the raw event LEN_ERR reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cexh",
+     "bits": "[4]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "CTR_EXHAUST interrupt enable. Lets the raw event CTR_EXHAUST reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dinr",
+     "bits": "[5]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "DMA_IN_RDY interrupt enable. Lets the raw event DMA_IN_RDY reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dour",
+     "bits": "[6]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "DMA_OUT_RDY interrupt enable. Lets the raw event DMA_OUT_RDY reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cswd",
+     "bits": "[7]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "CTX_SWITCH_DONE interrupt enable. Lets the raw event CTX_SWITCH_DONE reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "kerr",
+     "bits": "[8]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "KEY_ERR interrupt enable. Lets the raw event KEY_ERR reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "perr",
+     "bits": "[9]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "PROTO_ERR interrupt enable. Lets the raw event PROTO_ERR reach the interrupt output.\n\nUsage: Program before the first message; write 0 to mask the event.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_irq_inj",
+   "offset": "0x88",
+   "description": "AES-GCM interrupt injection register. Raises causes for software tests.",
+   "fields": [
+    {
+     "name": "done",
+     "bits": "[0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "DONE event injection. A rising edge raises the raw event DONE for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "tagf",
+     "bits": "[1]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "TAG_FAIL event injection. A rising edge raises the raw event TAG_FAIL for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cerr",
+     "bits": "[2]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "CFG_ERR event injection. A rising edge raises the raw event CFG_ERR for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "lerr",
+     "bits": "[3]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "LEN_ERR event injection. A rising edge raises the raw event LEN_ERR for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cexh",
+     "bits": "[4]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "CTR_EXHAUST event injection. A rising edge raises the raw event CTR_EXHAUST for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dinr",
+     "bits": "[5]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "DMA_IN_RDY event injection. A rising edge raises the raw event DMA_IN_RDY for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dour",
+     "bits": "[6]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "DMA_OUT_RDY event injection. A rising edge raises the raw event DMA_OUT_RDY for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cswd",
+     "bits": "[7]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "CTX_SWITCH_DONE event injection. A rising edge raises the raw event CTX_SWITCH_DONE for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "kerr",
+     "bits": "[8]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "KEY_ERR event injection. A rising edge raises the raw event KEY_ERR for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "perr",
+     "bits": "[9]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "PROTO_ERR event injection. A rising edge raises the raw event PROTO_ERR for software testing.\n\nUsage: Write 1 to inject, then 0; the IP raises the raw event on the rising edge.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_irq_sts",
+   "offset": "0x8C",
+   "description": "AES-GCM masked interrupt status register. Shows the enabled causes.",
+   "fields": [
+    {
+     "name": "done",
+     "bits": "[0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "DONE masked status. Reads the raw event DONE AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "tagf",
+     "bits": "[1]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "TAG_FAIL masked status. Reads the raw event TAG_FAIL AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cerr",
+     "bits": "[2]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "CFG_ERR masked status. Reads the raw event CFG_ERR AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "lerr",
+     "bits": "[3]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "LEN_ERR masked status. Reads the raw event LEN_ERR AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cexh",
+     "bits": "[4]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "CTR_EXHAUST masked status. Reads the raw event CTR_EXHAUST AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dinr",
+     "bits": "[5]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "DMA_IN_RDY masked status. Reads the raw event DMA_IN_RDY AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "dour",
+     "bits": "[6]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "DMA_OUT_RDY masked status. Reads the raw event DMA_OUT_RDY AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "cswd",
+     "bits": "[7]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "CTX_SWITCH_DONE masked status. Reads the raw event CTX_SWITCH_DONE AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "kerr",
+     "bits": "[8]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "KEY_ERR masked status. Reads the raw event KEY_ERR AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "perr",
+     "bits": "[9]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "PROTO_ERR masked status. Reads the raw event PROTO_ERR AND its enable.\n\nUsage: Read in the interrupt service routine to find the cause.\n\nValues:\n0x0 inactive (reset value);\n0x1 active.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_err_code",
+   "offset": "0x90",
+   "description": "AES-GCM error code register. Holds the first error of the last message.",
+   "fields": [
+    {
+     "name": "code",
+     "bits": "[3:0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "First error code of the last message. Identifies the first error that ended or rejected the message.\n\nUsage: Read after an error event; cleared at the next start.\n\nValues:\n0x0 none (reset value);\n0x1 CFG_ERR;\n0x2 LEN_ERR;\n0x3 CTR_EXHAUST;\n0x4 KEY_ERR;\n0x5 PROTO_ERR;\n0x6 TAG_FAIL;\n0x7 AES core error;\n0x8 to 0xF reserved.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "core",
+     "bits": "[7:4]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "AES core error code. Error code that the AES core reported when code equals 0x7.\n\nUsage: Read together with code; codes follow the AES core specification.\n\nValues:\n0x0 none (reset value);\n0x1 to 0x5 core codes 1 to 5;\n0x6 to 0xF reserved.\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_failcnt",
+   "offset": "0x94",
+   "description": "AES-GCM failed authentication counter register. Counts failed tag comparisons.",
+   "fields": [
+    {
+     "name": "cnt",
+     "bits": "[31:0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Failed tag counter. Number of failed tag comparisons since reset, saturating at its maximum.\n\nUsage: Read to detect repeated forgery attempts; only a hardware reset clears it.\n\nValues:\n0x00000000 to 0xFFFFFFFF count (reset value 0x0).\n\nUnit: count.\n\nLimits: Saturates at 0xFFFFFFFF."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_dmacfg",
+   "offset": "0x98",
+   "description": "AES-GCM DMA configuration register. Enables the DMA channels and sets burst sizes.",
+   "fields": [
+    {
+     "name": "in_en",
+     "bits": "[0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Input DMA channel enable. Allows o_dma_in_req to rise.\n\nUsage: Set before start when a DMA controller feeds the input stream.\n\nValues:\n0x0 disabled (reset value);\n0x1 enabled.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "out_en",
+     "bits": "[1]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Output DMA channel enable. Allows o_dma_out_req to rise.\n\nUsage: Set before start when a DMA controller drains the output stream.\n\nValues:\n0x0 disabled (reset value);\n0x1 enabled.\n\nUnit: none.\n\nLimits: none."
+    },
+    {
+     "name": "in_burst",
+     "bits": "[4:2]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Input burst size code. Number of beats of one input DMA burst.\n\nUsage: Program before enabling the channel; must fit in the input FIFO.\n\nValues:\n0x0 1 beat (reset value);\n0x1 2 beats;\n0x2 4 beats;\n0x3 8 beats;\n0x4 16 beats;\n0x5 to 0x7 reserved.\n\nUnit: beat.\n\nLimits: Burst bytes shall not exceed the FIFO capacity."
+    },
+    {
+     "name": "out_burst",
+     "bits": "[7:5]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Output burst size code. Number of beats of one output DMA burst.\n\nUsage: Program before enabling the channel.\n\nValues:\n0x0 1 beat (reset value);\n0x1 2 beats;\n0x2 4 beats;\n0x3 8 beats;\n0x4 16 beats;\n0x5 to 0x7 reserved.\n\nUnit: beat.\n\nLimits: Burst bytes shall not exceed the FIFO capacity."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_pio_din",
+   "offset": "0x9C",
+   "description": "AES-GCM programmed-I/O input register. Pushes one 32-bit stream word.",
+   "fields": [
+    {
+     "name": "data",
+     "bits": "[31:0]",
+     "type": "rw",
+     "reset": "0x0",
+     "description": "Input stream word. Four stream bytes with the first byte at bits [7:0]; each write pushes one word into the input FIFO.\n\nUsage: Write after checking aesgcm_fifosts.in_full; a write to a full FIFO is dropped and raises the protocol error event.\n\nValues:\n0x00000000 to 0xFFFFFFFF stream word (reset value 0x0).\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_pio_dout",
+   "offset": "0xA0",
+   "description": "AES-GCM programmed-I/O output register. Pops one 32-bit stream word.",
+   "fields": [
+    {
+     "name": "data",
+     "bits": "[31:0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Output stream word. Next four output bytes with the first byte at bits [7:0]; each read pops one word from the output FIFO.\n\nUsage: Read after checking aesgcm_fifosts.out_empty; a read from an empty FIFO returns zero and raises the protocol error event.\n\nValues:\n0x00000000 to 0xFFFFFFFF stream word (reset value 0x0).\n\nUnit: none.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_ctx_cons_a",
+   "offset": "0xA4",
+   "description": "AES-GCM consumed AAD bytes register. Reports AAD bytes consumed at the last suspend.",
+   "fields": [
+    {
+     "name": "bytes",
+     "bits": "[31:0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Consumed AAD bytes. Number of AAD bytes absorbed by the suspended message.\n\nUsage: Read after the CTX_SWITCH_DONE event of a suspend to resend the remaining AAD.\n\nValues:\n0x00000000 to 0xFFFFFFFF byte count (reset value 0x0).\n\nUnit: byte.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_ctx_cons_d",
+   "offset": "0xA8",
+   "description": "AES-GCM consumed payload bytes register. Reports payload bytes consumed at the last suspend.",
+   "fields": [
+    {
+     "name": "bytes",
+     "bits": "[31:0]",
+     "type": "ro",
+     "reset": "0x0",
+     "description": "Consumed payload bytes. Number of payload bytes processed by the suspended message.\n\nUsage: Read after the CTX_SWITCH_DONE event of a suspend to resend the remaining ciphertext or plaintext.\n\nValues:\n0x00000000 to 0xFFFFFFFF byte count (reset value 0x0).\n\nUnit: byte.\n\nLimits: none."
+    }
+   ]
+  },
+  {
+   "name": "aesgcm_ctxx",
+   "offset": "0x100",
+   "description": "AES-GCM context export word register. Window for exporting and importing a suspended context.",
+   "fields": [
+    {
+     "name": "word",
+     "bits": "[31:0]",
+     "type": "rwi",
+     "reset": "0x0",
+     "description": "Context word. Reads return the exported context word and writes load an imported word; available only when PARA_GCM_CTX_MODE equals 1.\n\nUsage: Read all 24 words after a suspend to save the context; write all 24 words before resume to restore it; blocked while the pin i_gcm_secure_only is 1.\n\nValues:\n0x00000000 to 0xFFFFFFFF context word (reset value 0x0).\n\nUnit: none.\n\nLimits: Words are valid only between suspend and resume."
+    }
+   ],
+   "repeat": {
+    "mode": "FIXED",
+    "count": 24,
+    "stride": "0x4"
+   }
+  }
+ ]
+}

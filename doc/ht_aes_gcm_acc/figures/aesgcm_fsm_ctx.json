@@ -1,0 +1,144 @@
+{
+  "page_name": "FSM_CTX",
+  "out_name": "aesgcm_fsm_ctx.drawio",
+  "function": "context engine",
+  "initial": "ENUM_ST_CTX_IDLE",
+  "reset": {
+    "signal": "i_rst_n_core",
+    "active_level": "low"
+  },
+  "states": [
+    {
+      "name": "ENUM_ST_CTX_IDLE",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_CTX_DEC",
+      "conditional_exit": false,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_CTX_MOVE",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_CTX_XFER",
+      "conditional_exit": true,
+      "hold_conditions": []
+    },
+    {
+      "name": "ENUM_ST_CTX_DONE",
+      "conditional_exit": false,
+      "hold_conditions": []
+    }
+  ],
+  "transitions": [
+    {
+      "src": "ENUM_ST_CTX_IDLE",
+      "dst": "ENUM_ST_CTX_IDLE",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_CTX_MOVE",
+      "dst": "ENUM_ST_CTX_MOVE",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_CTX_XFER",
+      "dst": "ENUM_ST_CTX_XFER",
+      "label": ""
+    },
+    {
+      "src": "ENUM_ST_CTX_IDLE",
+      "dst": "ENUM_ST_CTX_DEC",
+      "label": "request"
+    },
+    {
+      "src": "ENUM_ST_CTX_DEC",
+      "dst": "ENUM_ST_CTX_MOVE",
+      "label": "slot request"
+    },
+    {
+      "src": "ENUM_ST_CTX_DEC",
+      "dst": "ENUM_ST_CTX_XFER",
+      "label": "word request"
+    },
+    {
+      "src": "ENUM_ST_CTX_MOVE",
+      "dst": "ENUM_ST_CTX_DONE",
+      "label": "last word"
+    },
+    {
+      "src": "ENUM_ST_CTX_XFER",
+      "dst": "ENUM_ST_CTX_DONE",
+      "label": "word done"
+    },
+    {
+      "src": "ENUM_ST_CTX_DONE",
+      "dst": "ENUM_ST_CTX_IDLE",
+      "label": "reported"
+    }
+  ],
+  "condition_aliases": [
+    {
+      "label": "request",
+      "expression": "w_save_req || w_load_req || w_cmd_free || w_word_req"
+    },
+    {
+      "label": "slot request",
+      "expression": "w_save_req || (w_load_req && w_slot_valid) || w_cmd_free"
+    },
+    {
+      "label": "word request",
+      "expression": "w_ctx_mode_exp && !w_secure_only && w_word_req"
+    },
+    {
+      "label": "last word",
+      "expression": "w_word_idx_last"
+    },
+    {
+      "label": "word done",
+      "expression": "w_word_ack"
+    },
+    {
+      "label": "reported",
+      "expression": "1'b1"
+    }
+  ],
+  "layout": {
+    "margin": 160,
+    "positions": {
+      "ENUM_ST_CTX_IDLE": [
+        1700,
+        480
+      ],
+      "ENUM_ST_CTX_DEC": [
+        740,
+        480
+      ],
+      "ENUM_ST_CTX_MOVE": [
+        1220,
+        480
+      ],
+      "ENUM_ST_CTX_XFER": [
+        260,
+        480
+      ],
+      "ENUM_ST_CTX_DONE": [
+        740,
+        200
+      ]
+    }
+  },
+  "global_overrides": [
+    {
+      "id": "G1",
+      "source": "ANY STATE",
+      "destination": "ENUM_ST_CTX_IDLE",
+      "expression": "w_cmd_zeroize",
+      "note": "Zeroize forces idle and clears every slot; it has priority over every other transition."
+    }
+  ]
+}

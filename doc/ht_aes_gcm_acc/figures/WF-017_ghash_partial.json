@@ -1,0 +1,70 @@
+{
+ "head": {
+  "text": "WF-017 Aggregated GHASH: full batch of 4 blocks then a partial batch of 3 (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p..........."
+  },
+  {
+   "name": "in_valid",
+   "wave": "01.0........"
+  },
+  {
+   "name": "in_count",
+   "wave": "x==.........",
+   "data": [
+    "4",
+    "3"
+   ]
+  },
+  {
+   "name": "exp_lane0",
+   "wave": "x==.........",
+   "data": [
+    "H^4",
+    "H^3"
+   ]
+  },
+  {
+   "name": "exp_lane1",
+   "wave": "x==.........",
+   "data": [
+    "H^3",
+    "H^2"
+   ]
+  },
+  {
+   "name": "exp_lane2",
+   "wave": "x==.........",
+   "data": [
+    "H^2",
+    "H^1"
+   ]
+  },
+  {
+   "name": "exp_lane3",
+   "wave": "x==.........",
+   "data": [
+    "H^1",
+    "idle"
+   ]
+  },
+  {
+   "name": "ghash_y",
+   "wave": "=.==........",
+   "data": [
+    "Y0",
+    "Y4",
+    "Y7"
+   ]
+  }
+ ],
+ "foot": {
+  "text": "Lane i multiplies by H^(k-i) for a batch of k blocks, so a partial batch uses the lower powers; the accumulator Y is added to the first block before its multiplication."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

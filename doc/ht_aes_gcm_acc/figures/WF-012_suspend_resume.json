@@ -1,0 +1,57 @@
+{
+ "head": {
+  "text": "WF-012 Suspend at a block boundary and resume (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p..................................."
+  },
+  {
+   "name": "cmd_suspend",
+   "wave": "0.....10............................"
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "=.....=.....=.......=.....=.=.=.....",
+   "data": [
+    "PAY",
+    "SUSP",
+    "IDLE",
+    "REST",
+    "POW",
+    "PY_CFG",
+    "PAY"
+   ]
+  },
+  {
+   "name": "fsm_ctx_state",
+   "wave": "=.......=..=.........=...=..........",
+   "data": [
+    "IDLE",
+    "SAVE",
+    "IDLE",
+    "LOAD",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "slot_valid",
+   "wave": "0...........1......................."
+  },
+  {
+   "name": "cmd_resume",
+   "wave": "0...................10.............."
+  },
+  {
+   "name": "irq_raw_cswd",
+   "wave": "0...........1......................."
+  }
+ ],
+ "foot": {
+  "text": "Suspend drains the core, saves the context, and frees the sequencer; resume restores it and continues from the saved block. Illustrative."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

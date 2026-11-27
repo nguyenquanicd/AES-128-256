@@ -1,0 +1,58 @@
+{
+ "head": {
+  "text": "WF-020 GMAC: payload length 0, authentication of AAD only (CORE clock)"
+ },
+ "signal": [
+  {
+   "name": "i_clk_core",
+   "wave": "p......................."
+  },
+  {
+   "name": "aesgcm_datalen",
+   "wave": "=.......................",
+   "data": [
+    "0"
+   ]
+  },
+  {
+   "name": "fsm_seq_state",
+   "wave": "==.=...........===..==..",
+   "data": [
+    "KEY",
+    "SU_CFG",
+    "SU_RUN",
+    "AAD",
+    "LEN",
+    "TAG",
+    "FIN",
+    "IDLE"
+   ]
+  },
+  {
+   "name": "core_batch_valid",
+   "wave": "0..1.0.................."
+  },
+  {
+   "name": "ghash_valid",
+   "wave": "0..............1.0......"
+  },
+  {
+   "name": "out_fifo_push",
+   "wave": "0......................."
+  },
+  {
+   "name": "tag_valid",
+   "wave": "0..................10..."
+  },
+  {
+   "name": "o_done",
+   "wave": "0...................10.."
+  }
+ ],
+ "foot": {
+  "text": "With no payload the CTR configuration and payload states are skipped; the tag covers the AAD and the length block."
+ },
+ "config": {
+  "hscale": 1
+ }
+}

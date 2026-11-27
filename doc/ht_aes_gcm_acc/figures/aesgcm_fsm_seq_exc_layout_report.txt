@@ -1,0 +1,16 @@
+FSM: message sequencer, completion and exception view
+STATES: 4, TRANSITIONS: 6
+GLOBAL CONTROLS: 2 (notation panel; exact guards in CONDITION_MAPPING)
+RESET ENTRY: 0, CONTINUATION ENTRIES: 1 (FSM_SEQ_DATA -> ENUM_ST_SEQ_FIN)
+LAYOUT: flow-tb-snake-2-g180
+CROSSINGS: 0
+CONNECTOR CONFLICTS: 0 (minimum clearance 50 px)
+LABEL CONFLICTS: 0
+MAX LABEL DISTANCE: 60.0 px (maximum 120 px)
+NODE HITS: 0
+BENDS: 11
+MINIMUM GAP: 160.0 px (minimum 140 px)
+TEXT FIT: PASS (worst fill ratio 0.86)
+DISTRIBUTION: PASS (4 x-centers, 2 y-centers)
+PAGE: 1336 x 433 px
+RESULT: PASS
