@@ -13,7 +13,7 @@
  *                CSR word k of a key, IV or tag holds bytes 4k to 4k+3 with byte 4k in bits [7:0]
  *                (spec 9.1); the bundle carries blocks with byte 0 in the most significant byte.
  * Decisions    : DEC-016, DEC-020, DEC-022, DEC-023, DEC-024, DEC-027, DEC-028,
- *                DEC-031, DEC-032, DEC-035 (spec section 20).
+ *                DEC-031, DEC-032, DEC-035, DEC-037 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -92,6 +92,7 @@ module m_aesgcm_bus_ctl #(
   localparam logic [31:0] LPARA_EVT_LERR = 3,
   localparam logic [31:0] LPARA_EVT_DINR = 5,
   localparam logic [31:0] LPARA_EVT_DOUR = 6,
+  localparam logic [31:0] LPARA_EVT_CSWD = 7,
   localparam logic [31:0] LPARA_EVT_PERR = 9
 ) (
   // Clock and reset (BUS domain)
@@ -285,6 +286,10 @@ module m_aesgcm_bus_ctl #(
   logic [31:0]              w_s_rem_a;
   logic [31:0]              w_s_rem_d;
   logic [LPARA_EVT_W-1:0]   w_evt_bus;
+  logic [LPARA_EVT_W-1:0]   w_s_evt_m;
+  logic [LPARA_EVT_W-1:0]   w_evt_exp;
+  logic                     w_exp_hold;
+  logic                     w_exp_last;
   logic                     w_bus_perr;
   logic                     w_flush_cmd;
 
@@ -514,8 +519,24 @@ module m_aesgcm_bus_ctl #(
     w_evt_bus[LPARA_EVT_PERR] = w_evt_bus[LPARA_EVT_PERR] | w_bus_perr;
   end
 
+  // Export mode (DEC-037, DEC-039): CTX_SWITCH_DONE of a suspend (any report that is not a resume
+  // report) is replaced by the event raised when the export has loaded the last word into
+  // aesgcm_ctxx, so that software reads a complete image after the event. A suspend that cannot
+  // export (secure-only pin) is a configuration error and keeps the event.
+  assign w_exp_hold = (PARA_GCM_CTX_MODE == 1) & ~w_s_res & ~i_sec_only;
+  assign w_exp_last = reg_exp_act & i_wrsp_valid & (reg_widx == 5'(LPARA_EXP_WORDS - 1));
+
+  always_comb begin : p_com_evt_exp
+    w_s_evt_m = w_s_evt;
+    w_evt_exp = '0;
+    if (w_exp_hold)
+      w_s_evt_m[LPARA_EVT_CSWD] = 1'b0;
+    w_evt_exp[LPARA_EVT_CSWD] = w_exp_last;
+    w_evt_exp[LPARA_EVT_CERR] = (PARA_GCM_CTX_MODE == 1) & i_sts_valid & w_s_susp & i_sec_only;
+  end
+
   // Raw event loads (value 1), status = raw and enable, registered interrupt line.
-  assign o_irq_set = w_evt_bus | (i_sts_valid ? w_s_evt : '0);
+  assign o_irq_set = w_evt_bus | w_evt_exp | (i_sts_valid ? w_s_evt_m : '0);
   assign o_irq_sts = i_irq_raw & i_irq_en;
   assign o_int     = reg_int;
 

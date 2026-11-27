@@ -18,7 +18,8 @@
  *                Status bundle (CDC-002), MSB first: msg_end, suspended, resumed, cmd_ack,
  *                tag_ok, ver_ok, zeroized, key_ld, events 10, err_code 4, err_core 4, phase 4,
  *                ctx_vld 4, failcnt 32, cons_a 32, cons_d 32, rem_a 32, rem_d 32, tag 128 (322).
- * Decisions    : DEC-015, DEC-022, DEC-023, DEC-024, DEC-030, DEC-034 (spec section 20).
+ * Decisions    : DEC-015, DEC-022, DEC-023, DEC-024, DEC-030, DEC-034, DEC-036,
+ *                DEC-038, DEC-039 (spec section 20).
  */
 `timescale 1ns/1ps
 
@@ -263,6 +264,13 @@ module m_aesgcm_seq #(
   logic                     reg_cmd_ack;
   logic                     reg_cmd_seen;
   logic                     reg_dirty;
+  logic                     reg_done_p;
+  logic                     reg_cswd_p;
+  logic                     w_cswd_set;
+  logic                     w_cswd_clr;
+  logic                     w_done_new;
+  logic                     w_done_set;
+  logic                     w_done_clr;
   // Combinational controls
   logic                     w_gcm;
   logic                     w_feed_pass1;
@@ -708,11 +716,15 @@ module m_aesgcm_seq #(
       if (w_err_new == ENUM_ERR_NONE)
         w_err_new = ENUM_ERR_TAG;
     end
-    if (((reg_fsm_seq_current_state == ENUM_ST_SEQ_TAG) ||
-         ((reg_fsm_seq_current_state == ENUM_ST_SEQ_PAY) && w_pay_done && !w_gcm)))
+    // DONE leaves in the last report of the message, when the sequencer is back in IDLE (phase,
+    // busy and tag are then final and no later report changes them, DEC-036).
+    if ((reg_fsm_seq_current_state == ENUM_ST_SEQ_IDLE) && reg_done_p)
       w_evt_new[LPARA_EVT_DONE] = 1'b1;
-    if (((reg_fsm_seq_current_state == ENUM_ST_SEQ_SUSP) ||
-         (reg_fsm_seq_current_state == ENUM_ST_SEQ_REST)) && i_ctx_done)
+    // A resume is reported at once; a suspend leaves in the last report of the message, when the
+    // sequencer is back in IDLE and busy is 0 (DEC-039).
+    if ((reg_fsm_seq_current_state == ENUM_ST_SEQ_REST) && i_ctx_done)
+      w_evt_new[LPARA_EVT_CSWD] = 1'b1;
+    if ((reg_fsm_seq_current_state == ENUM_ST_SEQ_IDLE) && reg_cswd_p)
       w_evt_new[LPARA_EVT_CSWD] = 1'b1;
   end
 
@@ -753,9 +765,11 @@ module m_aesgcm_seq #(
       else if ((reg_fsm_seq_current_state == ENUM_ST_SEQ_ABRT) ||
                (reg_fsm_seq_current_state == ENUM_ST_SEQ_IDLE))
         reg_abort_p <= 1'b0;
+      // A zeroize that arrives after the ABRT state has started (reg_zero_act = 0) is kept until
+      // the sequencer is idle and carried out there (DEC-038).
       if (w_cmd_zero)
         reg_zero_p <= 1'b1;
-      else if ((reg_fsm_seq_current_state == ENUM_ST_SEQ_ABRT) || w_idle_zero)
+      else if (((reg_fsm_seq_current_state == ENUM_ST_SEQ_ABRT) && reg_zero_act) || w_idle_zero)
         reg_zero_p <= 1'b0;
       if (w_cmd_susp)
         reg_susp_p <= 1'b1;
@@ -994,6 +1008,41 @@ module m_aesgcm_seq #(
         reg_dirty <= 1'b1;
       else if (o_sts_send)
         reg_dirty <= 1'b0;
+    end
+  end
+
+  // The end of a message that was carried out (tag state, or payload end of a legacy mode) is
+  // remembered until the sequencer is back in IDLE, which raises DONE.
+  assign w_done_new = (reg_fsm_seq_current_state == ENUM_ST_SEQ_IDLE) & i_cfg_valid;
+  assign w_done_set = (reg_fsm_seq_current_state == ENUM_ST_SEQ_TAG) |
+                      ((reg_fsm_seq_current_state == ENUM_ST_SEQ_PAY) & w_pay_done & ~w_gcm);
+  assign w_done_clr = (reg_fsm_seq_current_state == ENUM_ST_SEQ_IDLE) & reg_done_p;
+
+  assign w_cswd_set = (reg_fsm_seq_current_state == ENUM_ST_SEQ_SUSP) & i_ctx_done;
+  assign w_cswd_clr = (reg_fsm_seq_current_state == ENUM_ST_SEQ_IDLE) & reg_cswd_p;
+
+  always_ff @(posedge i_clk_core, negedge i_rst_n_core) begin : p_ff_cswd_p
+    if (!i_rst_n_core) begin
+      reg_cswd_p <= 1'b0;
+    end else begin
+      casez ({w_cswd_clr, w_cswd_set})
+        2'b1?:   reg_cswd_p <= 1'b0;
+        2'b01:   reg_cswd_p <= 1'b1;
+        default: reg_cswd_p <= reg_cswd_p;
+      endcase
+    end
+  end
+
+  always_ff @(posedge i_clk_core, negedge i_rst_n_core) begin : p_ff_done_p
+    if (!i_rst_n_core) begin
+      reg_done_p <= 1'b0;
+    end else begin
+      casez ({w_done_new, w_done_set, w_done_clr})
+        3'b1??:  reg_done_p <= 1'b0;
+        3'b01?:  reg_done_p <= 1'b1;
+        3'b001:  reg_done_p <= 1'b0;
+        default: reg_done_p <= reg_done_p;
+      endcase
     end
   end
 
