@@ -519,7 +519,8 @@ module tb_aesgcm_assert #(
             !((awvalid && $isunknown({awid, awaddr, awlen, awsize, awburst})) ||
               (wvalid && $isunknown({wdata, wstrb, wlast})) ||
               (arvalid && $isunknown({arid, araddr, arlen, arsize, arburst}))));
-        chk(AXI34, aw_out && w_last_seen && !bvalid, b_wait <= 64);
+        // From the last write beat until the response: BVALID already high, or at most 64 clocks of wait.
+        chk(AXI34, aw_out && w_last_seen, bvalid === 1'b1 || b_wait <= 64);
       end
 
       // ---------------------------------------------------------- DMA four-phase

@@ -674,3 +674,69 @@ task automatic ft037();
            tag_full_ok(), "all 96 output bytes and the tag equal the uninterrupted model");
   tc_end();
 endtask
+
+// =================================================================================================
+// FT-038  Second write address while the first response is pending (REQ-IF-002, 6.3.2, TEST-017)
+//   Priority     : P2
+//   Objective    : one write burst at a time: AWREADY stays low from the acceptance of a burst until
+//                  its response is accepted; an AWVALID raised in that window is held with a stable
+//                  payload (IHI0022H A3.2.1, A3.2.2) and the second burst is then served.
+//   Requirements : REQ-IF-002, ERR-008, 6.3.2 (table of outstanding transactions)
+//   Config/state : AXI wrapper; reset; no message (the bursts address the read window and are
+//                  consumed without data: SLVERR).
+//   SW sequence  : none (bus traffic only).
+//   Stimulus     : burst 1 of 2 beats with BREADY delayed by 40 clocks; AW of burst 2 raised when
+//                  BVALID of burst 1 is up; one beat for burst 2.
+//   Checks       :
+//     FT038-C1 | REQ-IF-002 | AW raised while the response is pending | AWREADY low at least one clock, then high | tc_check | bounded | never low
+//     FT038-C2 | ERR-008 | both bursts | SLVERR and the IDs echoed | tc_check | at end | differs
+//   Seed/replay  : +SEED=<n>; +TEST=FT-038
+// =================================================================================================
+task automatic ft038();
+  logic [1:0] br1, br2;
+  logic [C_IW-1:0] bid1, bid2;
+  bit ok1, stalled, ok2;
+  int n, saved_dly;
+  tc_begin("FT-038", 2);
+  tc_skip_if(C_AXI == 0, "no AXI4 window on m_aesgcm_acc_apb_top (FEAT-006)");
+  if (tc_skip != "") begin tc_end(); return; end
+  set_pin(1'b0);
+  saved_dly = axi_bready_dly_max;
+  axi_bready_dly_max = 40;
+  for (int i = 0; i < 8 * C_BEAT_AXI; i++) tx_b[i] = 8'(rnd32());
+  stalled = 1'b0; ok2 = 1'b1; br2 = 2'b11; bid2 = '0;
+  fork
+    axi_write_burst(4'h1, AXI_RD_WIN, 1, AXI_SIZE_FULL, BURST_INCR, 0, 1'b0, br1, bid1, ok1);
+    begin
+      n = 0;
+      while ((o_axi_bvalid !== 1'b1) && (n < 5000)) begin @(posedge clk_bus); n++; end
+      axi_awid <= 4'h2; axi_awaddr <= AXI_RD_WIN; axi_awlen <= 8'd0; axi_awsize <= AXI_SIZE_FULL;
+      axi_awburst <= BURST_INCR; axi_awvalid <= 1'b1;
+      n = 0;
+      do begin
+        @(posedge clk_bus);
+        if (o_axi_awready !== 1'b1) stalled = 1'b1;
+        n++;
+      end while ((o_axi_awready !== 1'b1) && (n < 5000));
+      axi_awvalid <= 1'b0;
+      if (n >= 5000) ok2 = 1'b0;
+      else begin
+        axi_wdata <= '0; axi_wstrb <= {C_BEAT_AXI{1'b1}}; axi_wlast <= 1'b1; axi_wvalid <= 1'b1;
+        n = 0;
+        do begin @(posedge clk_bus); n++; end while ((o_axi_wready !== 1'b1) && (n < 5000));
+        axi_wvalid <= 1'b0; axi_wlast <= 1'b0;
+        axi_bready <= 1'b1;
+        n = 0;
+        do begin @(posedge clk_bus); n++; end while ((o_axi_bvalid !== 1'b1) && (n < 5000));
+        br2 = o_axi_bresp; bid2 = o_axi_bid;
+        axi_bready <= 1'b0;
+        if (n >= 5000) ok2 = 1'b0;
+      end
+    end
+  join
+  axi_bready_dly_max = saved_dly;
+  tc_check("FT038-C1", ok1 && ok2 && stalled, "AWREADY low while the first response is pending, high after it");
+  tc_check("FT038-C2", (br1 == 2'b10) && (bid1 == 4'h1) && (br2 == 2'b10) && (bid2 == 4'h2),
+           "both bursts answered with SLVERR and their IDs");
+  tc_end();
+endtask
