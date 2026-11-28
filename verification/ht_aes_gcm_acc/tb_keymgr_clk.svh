@@ -122,6 +122,9 @@ task automatic do_reset(input int ncyc);
   protect_en = pend_protect_en;      // static inputs change only while the reset is asserted
   slverr_en  = pend_slverr_en;
   tb_drive_idle();
+  // Both domains are in reset: the registers that the shadows follow read their reset values.
+  sh_irq_en  = 10'h0;
+  sh_dmacfg  = 8'h0;
   repeat (ncyc) @(posedge clk_bus);
   repeat (ncyc) @(posedge clk_core);
   fork
@@ -136,7 +139,13 @@ endtask
 task automatic do_reset_one(input bit core, input int ncyc);
   #(t_bus_per / 3);
   if (core) rst_n_core = 1'b0;
-  else begin rst_n_bus = 1'b0; tb_drive_idle(); end
+  else begin
+    rst_n_bus = 1'b0;
+    tb_drive_idle();
+    // The BUS domain holds the registers that the shadows follow: they read their reset values now.
+    sh_irq_en = 10'h0;
+    sh_dmacfg = 8'h0;
+  end
   if (core) begin
     repeat (ncyc) @(posedge clk_core);
     @(posedge clk_core); rst_n_core <= 1'b1;

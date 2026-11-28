@@ -155,8 +155,11 @@ bound) and the engineer review (`review_ledger.md`, PENDING).
 `tb_probe_bind.svh` binds the probe placeholders of `probe_list.md` to the RTL (build with
 `+define+TB_PROBE_BIND`, plus `+define+TB_PROBE_HAS_CTX` when the build has the context engine; not for
 CFG-LEGACY). Three probes are not exposed by the RTL and read 0: `OUT_FIFO_LEVEL`, `GHASH_PP_VALID`,
-`GHASH_EXP_LANE`. With the binding the probe assertions run: the first probe-bound FULL run gave 49 PASS,
-0 failed checks and 4 failures of INT-01 in TC-13 (analysis pending, rule R-026).
+`GHASH_EXP_LANE`. With the binding the probe assertions run (INT-01, POL-03, SEC-01, SEC-02, XING-01, XING-02, and the
+probe checks of FT-030 and FT-031): the probe-bound FULL run (seed 1) gives 49 PASS, 0 FAIL, 0 assertion
+failures and no assertion left unexercised. The first probe-bound run showed 4 failures of INT-01 in TC-13;
+they came from the testbench: after a BUS-domain reset the shadow of `aesgcm_irq_en` was cleared only when the
+task returned, 128 ns after the DUT register was reset (fixed in `do_reset` and `do_reset_one`).
 
 `+TEST=WF-nnn` writes `waveforms_sim/<figure stem>.vcd` (git-ignored, regenerate it). `wfevidence.py <repo>
 <waveforms_sim> <waveform_compare.md>` converts each window to WaveJSON and SVG with the tools of the
