@@ -1,34 +1,29 @@
 # Waveform comparison index (rule R-033)
 
-To be filled by the integrator after the synthesis-branch runs `+TEST=WF-nnn` (one run per row; the
-VCD is written to this folder with the stem of the specification figure). Convert each VCD window to
-WaveJSON and SVG with the same stem (skill `vlsit-wavedrom-waveform`, `vlsit_waveform_svg.py`), then
-set the result to MATCH, DIFFERENT (with the R-026 analysis and the designer decision) or
-NOT-SIMULATED (with the reason). Internal rows need the probes of `../probe_list.md` to be bound.
-Nothing in this table has been simulated yet.
+Each row compares the figure of the specification with the window simulated by `+TEST=WF-nnn` (VCD, WaveJSON and SVG with the same stem in this folder). The result is an automatic screening (`wfevidence.py`, the order of the first transition of every row that the testbench view `u_wf` exposes, within the figure's tolerance of one bus clock); the designer's visual review of each pair is still PENDING. DIFFERENT would need the analysis of rule R-026.
 
 | Waveform ID | Specification figure | Simulated waveform | Result | Note |
 |---|---|---|---|---|
-| WF-001 | doc/ht_aes_gcm_acc/figures/WF-001_start_bundle.svg | waveforms_sim/WF-001_start_bundle.svg | NOT-SIMULATED | not yet run |
-| WF-002 | doc/ht_aes_gcm_acc/figures/WF-002_gcm_encrypt.svg | waveforms_sim/WF-002_gcm_encrypt.svg | NOT-SIMULATED | not yet run; figure is 1 lane, compare in CFG-LINK or with TB_AES_LANE_NUM=1 |
-| WF-003 | doc/ht_aes_gcm_acc/figures/WF-003_pass1_fail.svg | waveforms_sim/WF-003_pass1_fail.svg | NOT-SIMULATED | not yet run; needs policy A (CFG-FULL, CFG-MIN) |
-| WF-004 | doc/ht_aes_gcm_acc/figures/WF-004_pass2.svg | waveforms_sim/WF-004_pass2.svg | NOT-SIMULATED | not yet run; needs policy A |
-| WF-005 | doc/ht_aes_gcm_acc/figures/WF-005_secure_only.svg | waveforms_sim/WF-005_secure_only.svg | NOT-SIMULATED | not yet run; needs policy C |
-| WF-006 | doc/ht_aes_gcm_acc/figures/WF-006_axi_write.svg | waveforms_sim/WF-006_axi_write.svg | NOT-SIMULATED | not yet run; AXI wrapper |
-| WF-007 | doc/ht_aes_gcm_acc/figures/WF-007_axi_wrap.svg | waveforms_sim/WF-007_axi_wrap.svg | NOT-SIMULATED | not yet run; AXI wrapper |
-| WF-008 | doc/ht_aes_gcm_acc/figures/WF-008_axi_read.svg | waveforms_sim/WF-008_axi_read.svg | NOT-SIMULATED | not yet run; AXI wrapper |
-| WF-009 | doc/ht_aes_gcm_acc/figures/WF-009_dma_hs.svg | waveforms_sim/WF-009_dma_hs.svg | NOT-SIMULATED | not yet run |
-| WF-010 | doc/ht_aes_gcm_acc/figures/WF-010_pio_overrun.svg | waveforms_sim/WF-010_pio_overrun.svg | NOT-SIMULATED | not yet run |
-| WF-011 | doc/ht_aes_gcm_acc/figures/WF-011_key_side.svg | waveforms_sim/WF-011_key_side.svg | NOT-SIMULATED | not yet run; needs PARA_KEY_SIDE_EN = 1 |
-| WF-012 | doc/ht_aes_gcm_acc/figures/WF-012_suspend_resume.svg | waveforms_sim/WF-012_suspend_resume.svg | NOT-SIMULATED | not yet run; needs context slots |
-| WF-013 | doc/ht_aes_gcm_acc/figures/WF-013_abort.svg | waveforms_sim/WF-013_abort.svg | NOT-SIMULATED | not yet run |
-| WF-014 | doc/ht_aes_gcm_acc/figures/WF-014_zeroize.svg | waveforms_sim/WF-014_zeroize.svg | NOT-SIMULATED | not yet run |
-| WF-015 | doc/ht_aes_gcm_acc/figures/WF-015_interrupt.svg | waveforms_sim/WF-015_interrupt.svg | NOT-SIMULATED | not yet run |
-| WF-016 | doc/ht_aes_gcm_acc/figures/WF-016_sync_ratio.svg | waveforms_sim/WF-016_sync_ratio.svg | NOT-SIMULATED | not yet run; needs +define+TB_CLK_ASYNC=0 and +CLK_RATIO=3_2 |
-| WF-017 | doc/ht_aes_gcm_acc/figures/WF-017_ghash_partial.svg | waveforms_sim/WF-017_ghash_partial.svg | NOT-SIMULATED | not yet run; ARCH 2, 4 lanes |
-| WF-018 | doc/ht_aes_gcm_acc/figures/WF-018_reset.svg | waveforms_sim/WF-018_reset.svg | NOT-SIMULATED | not yet run |
-| WF-019 | doc/ht_aes_gcm_acc/figures/WF-019_legacy_ctr.svg | waveforms_sim/WF-019_legacy_ctr.svg | NOT-SIMULATED | not yet run |
-| WF-020 | doc/ht_aes_gcm_acc/figures/WF-020_gmac.svg | waveforms_sim/WF-020_gmac.svg | NOT-SIMULATED | not yet run |
-| WF-021 | doc/ht_aes_gcm_acc/figures/WF-021_ctx_export.svg | waveforms_sim/WF-021_ctx_export.svg | NOT-SIMULATED | not yet run; needs the export build (TB_CFG_EXPORT) |
-| WF-022 | doc/ht_aes_gcm_acc/figures/WF-022_ghash_pipe.svg | waveforms_sim/WF-022_ghash_pipe.svg | NOT-SIMULATED | not yet run; row ghash_y_pipe1 needs +define+TB_GHASH_PIPE=1, row ghash_y_pipe0 the default build |
-| WF-023 | doc/ht_aes_gcm_acc/figures/WF-023_cmd_ack.svg | waveforms_sim/WF-023_cmd_ack.svg | NOT-SIMULATED | not yet run |
+| WF-001 | doc/ht_aes_gcm_acc/figures/WF-001_start_bundle.svg | waveforms_sim/WF-001_start_bundle.svg | DIFFERENT | order of first transitions: bundle_ack_sync (cycle 8) after fsm_seq_state (cycle 9); automatic screening, designer review PENDING |
+| WF-002 | doc/ht_aes_gcm_acc/figures/WF-002_gcm_encrypt.svg | waveforms_sim/WF-002_gcm_encrypt.svg | MATCH | first-transition order of 7 rows equals the figure; automatic screening, designer review PENDING |
+| WF-003 | doc/ht_aes_gcm_acc/figures/WF-003_pass1_fail.svg | waveforms_sim/WF-003_pass1_fail.svg | MATCH | first-transition order of 4 rows equals the figure; automatic screening, designer review PENDING |
+| WF-004 | doc/ht_aes_gcm_acc/figures/WF-004_pass2.svg | waveforms_sim/WF-004_pass2.svg | DIFFERENT | order of first transitions: core_out_valid and ghash_valid not together; core_out_valid (cycle 13) after tag_match (cycle 20); out_fifo_push and ghash_valid not together; automatic screening, designer review PENDING |
+| WF-005 | doc/ht_aes_gcm_acc/figures/WF-005_secure_only.svg | waveforms_sim/WF-005_secure_only.svg | MATCH | first-transition order of 2 rows equals the figure; automatic screening, designer review PENDING |
+| WF-006 | doc/ht_aes_gcm_acc/figures/WF-006_axi_write.svg | waveforms_sim/WF-006_axi_write.svg | DIFFERENT | order of first transitions: i_axi_awvalid (cycle 1) after i_axi_wvalid (cycle 3); i_axi_awvalid (cycle 1) after o_axi_wready (cycle 3); i_axi_awvalid (cycle 1) after i_axi_wlast (cycle 10); automatic screening, designer review PENDING |
+| WF-007 | doc/ht_aes_gcm_acc/figures/WF-007_axi_wrap.svg | waveforms_sim/WF-007_axi_wrap.svg | DIFFERENT | order of first transitions: i_axi_awvalid and i_axi_awburst not together; i_axi_awburst (cycle 1) after o_axi_awready (cycle 2); i_axi_awburst (cycle 1) after i_axi_wvalid (cycle 3); automatic screening, designer review PENDING |
+| WF-008 | doc/ht_aes_gcm_acc/figures/WF-008_axi_read.svg | waveforms_sim/WF-008_axi_read.svg | DIFFERENT | order of first transitions: o_axi_rvalid (cycle 5) after o_axi_rlast (cycle 8); o_axi_rvalid and fifo_pop not together; i_axi_rready (cycle 3) after o_axi_rlast (cycle 8); not in the view: i_axi_arlen_burst; automatic screening, designer review PENDING |
+| WF-009 | doc/ht_aes_gcm_acc/figures/WF-009_dma_hs.svg | waveforms_sim/WF-009_dma_hs.svg | DIFFERENT | order of first transitions: o_dma_out_req (cycle 5) after i_dma_in_ack (cycle 8); fifo_out_has_burst (cycle 5) after i_dma_in_ack (cycle 8); automatic screening, designer review PENDING |
+| WF-010 | doc/ht_aes_gcm_acc/figures/WF-010_pio_overrun.svg | waveforms_sim/WF-010_pio_overrun.svg | DIFFERENT | order of first transitions: fifo_in_full (cycle 5) after irq_raw_perr (cycle 8); automatic screening, designer review PENDING |
+| WF-011 | doc/ht_aes_gcm_acc/figures/WF-011_key_side.svg | waveforms_sim/WF-011_key_side.svg | MATCH | first-transition order of 6 rows equals the figure; automatic screening, designer review PENDING |
+| WF-012 | doc/ht_aes_gcm_acc/figures/WF-012_suspend_resume.svg | waveforms_sim/WF-012_suspend_resume.svg | DIFFERENT | order of first transitions: slot_valid and irq_raw_cswd not together; automatic screening, designer review PENDING |
+| WF-013 | doc/ht_aes_gcm_acc/figures/WF-013_abort.svg | waveforms_sim/WF-013_abort.svg | DIFFERENT | order of first transitions: cmd_abort (cycle 6) after fifo_flush (cycle 7); fsm_seq_state and fifo_flush not together; automatic screening, designer review PENDING |
+| WF-014 | doc/ht_aes_gcm_acc/figures/WF-014_zeroize.svg | waveforms_sim/WF-014_zeroize.svg | MATCH | first-transition order of 6 rows equals the figure; automatic screening, designer review PENDING |
+| WF-015 | doc/ht_aes_gcm_acc/figures/WF-015_interrupt.svg | waveforms_sim/WF-015_interrupt.svg | DIFFERENT | order of first transitions: event_pulse_done (cycle 3) after apb_w1c_write (cycle 11); irq_raw_done (cycle 4) after apb_w1c_write (cycle 11); irq_sts_done (cycle 4) after apb_w1c_write (cycle 11); automatic screening, designer review PENDING |
+| WF-016 | doc/ht_aes_gcm_acc/figures/WF-016_sync_ratio.svg | waveforms_sim/WF-016_sync_ratio.svg | MATCH | first-transition order of 4 rows equals the figure; automatic screening, designer review PENDING |
+| WF-017 | doc/ht_aes_gcm_acc/figures/WF-017_ghash_partial.svg | waveforms_sim/WF-017_ghash_partial.svg | DIFFERENT | order of first transitions: in_valid and in_count not together; automatic screening, designer review PENDING |
+| WF-018 | doc/ht_aes_gcm_acc/figures/WF-018_reset.svg | waveforms_sim/WF-018_reset.svg | DIFFERENT | order of first transitions: bundle_req (cycle 2) after i_rst_n_bus (cycle 6); bundle_req (cycle 2) after i_rst_n_core (cycle 6); bundle_req (cycle 2) after fsm_seq_state (cycle 6); automatic screening, designer review PENDING |
+| WF-019 | doc/ht_aes_gcm_acc/figures/WF-019_legacy_ctr.svg | waveforms_sim/WF-019_legacy_ctr.svg | DIFFERENT | order of first transitions: aesgcm_ctrl_start (cycle 1) after o_reg_wr_en (cycle 5); aesgcm_ctrl_start (cycle 1) after o_reg_rd_en (cycle 17); o_reg_wr_en and pio_din_word not together; automatic screening, designer review PENDING |
+| WF-020 | doc/ht_aes_gcm_acc/figures/WF-020_gmac.svg | waveforms_sim/WF-020_gmac.svg | MATCH | first-transition order of 5 rows equals the figure; automatic screening, designer review PENDING |
+| WF-021 | doc/ht_aes_gcm_acc/figures/WF-021_ctx_export.svg | waveforms_sim/WF-021_ctx_export.svg | DIFFERENT | order of first transitions: i_apb_psel (cycle 3) after i_apb_penable (cycle 4); apb_ctxx_index (cycle 3) after i_apb_penable (cycle 4); apb_ctxx_index (cycle 3) after o_apb_prdata (cycle 4); automatic screening, designer review PENDING |
+| WF-022 | doc/ht_aes_gcm_acc/figures/WF-022_ghash_pipe.svg | waveforms_sim/WF-022_ghash_pipe.svg | DIFFERENT | order of first transitions: ghash_in_valid and in_count not together; automatic screening, designer review PENDING |
+| WF-023 | doc/ht_aes_gcm_acc/figures/WF-023_cmd_ack.svg | waveforms_sim/WF-023_cmd_ack.svg | DIFFERENT | only 1 comparable row(s); not in the view: aesgcm_ctrl.abort, cmd_send (u_xing_cmd), cmd_valid (CORE), sts_valid cmd_ack=1, hw clear abort, aesgcm_sts.busy; automatic screening, designer review PENDING |

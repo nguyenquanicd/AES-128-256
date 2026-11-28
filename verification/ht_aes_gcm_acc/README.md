@@ -150,6 +150,19 @@ figure for every WF scenario: `vlsit_sim_evidence.py check` reports the missing 
 detection run of `fault_plan.md` (R-096), coverage closure, the probe-based assertions (probes not
 bound) and the engineer review (`review_ledger.md`, PENDING).
 
+## Probes and waveform evidence
+
+`tb_probe_bind.svh` binds the probe placeholders of `probe_list.md` to the RTL (build with
+`+define+TB_PROBE_BIND`, plus `+define+TB_PROBE_HAS_CTX` when the build has the context engine; not for
+CFG-LEGACY). Three probes are not exposed by the RTL and read 0: `OUT_FIFO_LEVEL`, `GHASH_PP_VALID`,
+`GHASH_EXP_LANE`. With the binding the probe assertions run: the first probe-bound FULL run gave 49 PASS,
+0 failed checks and 4 failures of INT-01 in TC-13 (analysis pending, rule R-026).
+
+`+TEST=WF-nnn` writes `waveforms_sim/<figure stem>.vcd` (git-ignored, regenerate it). `wfevidence.py <repo>
+<waveforms_sim> <waveform_compare.md>` converts each window to WaveJSON and SVG with the tools of the
+skill and screens the order of the first transitions against the figure of the specification; the
+rows marked DIFFERENT are the screening result and still need the analysis of rule R-026 by the designer.
+
 ## Assertion classes
 
 An assertion failure counts in `assertion failures`. APB-17 (PSLVERR low outside the last cycle of a

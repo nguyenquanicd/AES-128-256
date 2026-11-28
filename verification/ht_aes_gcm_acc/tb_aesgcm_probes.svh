@@ -13,6 +13,11 @@
 //                waveform dumps are flat. Port-based checks never depend on a probe.
 // -------------------------------------------------------------------------------------------------
 
+// The integrator's binding to the delivered RTL (tb_probe_bind.svh) is used when TB_PROBE_BIND is defined.
+`ifdef TB_PROBE_BIND
+  `include "tb_probe_bind.svh"
+`endif
+
 `ifndef TB_PROBE_BUNDLE_REQ
   `define TB_PROBE_BUNDLE_REQ 1'b0          // u_xing_cfg request launched in BUS (WF-001/016/018)
 `endif
